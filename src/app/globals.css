@@ -1,0 +1,547 @@
+/* src/app/globals.css */
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f4;
+}
+
+/* The Container for the whole page */
+.container {
+  display: flex; /* Lines up items side-by-side */
+  flex-direction: column; /* Stacks them vertically first (for mobile) */
+  min-height: 100vh; /* Takes up the full height of the screen */
+  align-items: center;
+}
+
+/* The Header Section */
+.header {
+  text-align: center;
+  margin-top: 50px;
+  margin-bottom: 40px;
+}
+
+.title {
+  font-size: 2.5rem;
+  color: #333;
+}
+
+.subtitle {
+  color: #666;
+  font-size: 1.2rem;
+}
+
+/* The Box that holds our two main cards */
+.card-container {
+  display: flex; /* Side-by-side layout */
+  gap: 30px; /* Space between the cards */
+  width: 80%;
+  max-width: 1000px;
+}
+
+/* The Design for the Cards */
+.card {
+  flex: 1; /* Both cards take equal width */
+  background: white;
+  padding: 40px;
+  border-radius: 15px; /* Rounded corners */
+  text-align: center;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Subtle shadow */
+  transition: transform 0.2s; /* Smooth animation when hovering */
+}
+
+.card:hover {
+  transform: translateY(-5px); /* Moves up slightly when hovered */
+}
+
+/* Specific colors for the buttons */
+.btn {
+  padding: 15px 30px;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 20px;
+  width: 100%;
+}
+
+.btn-blue {
+  background-color: #4285F4; /* Google Blue */
+}
+
+.btn-green {
+  background-color: #34A853; /* Google Green */
+}
+
+/* Mobile Responsiveness: If screen is small, stack cards vertically */
+@media (max-width: 768px) {
+  .card-container {
+    flex-direction: column;
+  }
+}
+/* --- LOGIN PAGE STYLES --- */
+
+/* Centers the login box perfectly in the middle of the screen */
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #e9ecef; /* Light grey background */
+}
+
+/* The white box holding the form */
+.login-box {
+  background: white;
+  padding: 40px;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  width: 100%;
+  max-width: 400px; /* Keeps it from getting too wide */
+  text-align: center;
+}
+
+/* Input fields (Email/Password) */
+.input-field {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  box-sizing: border-box; /* Ensures padding doesn't break the width */
+}
+
+/* The Main Login Button */
+.login-btn {
+  width: 100%;
+  padding: 12px;
+  background-color: #333;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  margin-bottom: 10px;
+}
+
+.login-btn:hover {
+  background-color: #555;
+}
+
+/* Google Sign-In Button (Specific Requirement) */
+.google-btn {
+  width: 100%;
+  padding: 12px;
+  background-color: white;
+  color: #333;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.google-btn:hover {
+  background-color: #f8f9fa;
+}
+
+.back-link {
+  display: block;
+  margin-top: 20px;
+  color: #666;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+/* --- SEEKER DASHBOARD STYLES --- */
+
+.dashboard-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* The Search Area */
+.search-section {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 30px;
+}
+
+.search-input {
+  flex: 1; /* Takes up all available space */
+  padding: 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+/* The Grid that holds the cards */
+.job-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* Auto-responsive grid */
+  gap: 20px;
+}
+
+/* THE JOB CARD - The most important part */
+.job-card {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 20px;
+  transition: box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.job-card:hover {
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  border-color: #4285F4; /* Highlight blue on hover */
+}
+
+.job-title {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #333;
+  margin: 0 0 5px 0;
+}
+
+.job-location {
+  color: #666;
+  font-size: 0.9rem;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Tags (e.g. "Urgent", "Remote") */
+.tags-container {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.tag {
+  font-size: 0.8rem;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background-color: #f0f0f0;
+  color: #555;
+}
+
+.tag-urgent {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+.apply-btn {
+  width: 100%;
+  padding: 10px;
+  background-color: #4285F4;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+/* --- JOB DETAILS PAGE STYLES --- */
+
+.job-details-container {
+  max-width: 800px;
+  margin: 40px auto;
+  background: white;
+  padding: 40px;
+  border-radius: 15px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+}
+
+.details-header {
+  border-bottom: 1px solid #eee;
+  padding-bottom: 20px;
+  margin-bottom: 20px;
+}
+
+.big-title {
+  font-size: 2rem;
+  color: #333;
+  margin: 0;
+}
+
+.pay-badge {
+  display: inline-block;
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  padding: 8px 15px;
+  border-radius: 8px;
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+.section-title {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-top: 30px;
+  margin-bottom: 10px;
+  color: #444;
+}
+
+.description-text {
+  line-height: 1.6;
+  color: #555;
+}
+
+/* The Action Area (Apply Button) */
+.action-area {
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+  display: flex;
+  gap: 15px;
+}
+
+.btn-apply {
+  flex: 2;
+  background-color: #4285F4; /* Google Blue */
+  color: white;
+  padding: 15px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.btn-save {
+  flex: 1;
+  background-color: white;
+  border: 1px solid #ccc;
+  color: #555;
+  padding: 15px;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+/* Placeholder for the Map */
+.map-placeholder {
+  width: 100%;
+  height: 250px;
+  background-color: #e0e0e0;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #757575;
+  margin-top: 10px;
+}
+/* --- PROVIDER SIDE STYLES --- */
+
+/* The 'Add New' Card on the Dashboard */
+.add-new-card {
+  border: 2px dashed #34A853; /* Google Green dashed line */
+  background-color: #f1f8e9;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.add-new-card:hover {
+  background-color: #e8f5e9;
+  transform: translateY(-2px);
+}
+
+/* --- POST JOB FORM --- */
+.form-container {
+  max-width: 700px;
+  margin: 40px auto;
+  background: white;
+  padding: 40px;
+  border-radius: 15px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.form-input, .form-textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+.form-textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+/* The Magic Gemini Button */
+.gemini-btn {
+  background: linear-gradient(135deg, #4285F4, #9b59b6); /* Magical gradient */
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 10px;
+  float: right; /* Puts it to the right */
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 15px;
+  background-color: #34A853; /* Green for Provider */
+  color: white;
+  font-size: 1.1rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.submit-btn:hover {
+  background-color: #2e7d32;
+}
+/* --- GEMINI CHATBOT STYLES --- */
+
+/* The Floating Button (Bottom Right) */
+.chat-widget-btn {
+  position: fixed;
+  bottom: 90px;
+  right: 30px;
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #4285F4, #DB4437, #F4B400, #0F9D58); /* Google Colors */
+  border-radius: 50%;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  border: none;
+  transition: transform 0.2s;
+}
+
+.chat-widget-btn:hover {
+  transform: scale(1.1);
+}
+
+/* The Chat Window (Hidden by default) */
+.chat-window {
+  position: fixed;
+  bottom: 100px;
+  right: 30px;
+  width: 350px;
+  height: 500px;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 1000;
+  border: 1px solid #e0e0e0;
+}
+
+/* Chat Header */
+.chat-header {
+  background: #4285F4;
+  color: white;
+  padding: 15px;
+  font-weight: bold;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Chat Messages Area */
+.chat-messages {
+  flex: 1;
+  padding: 15px;
+  overflow-y: auto;
+  background-color: #f8f9fa;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Individual Message Bubbles */
+.message {
+  max-width: 80%;
+  padding: 10px 15px;
+  border-radius: 15px;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.message-user {
+  align-self: flex-end; /* Push to right */
+  background-color: #4285F4;
+  color: white;
+  border-bottom-right-radius: 2px;
+}
+
+.message-bot {
+  align-self: flex-start; /* Push to left */
+  background-color: white;
+  border: 1px solid #ddd;
+  color: #333;
+  border-bottom-left-radius: 2px;
+}
+
+/* Input Area */
+.chat-input-area {
+  padding: 10px;
+  border-top: 1px solid #eee;
+  display: flex;
+  gap: 10px;
+  background: white;
+}
+
+.chat-input {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  outline: none;
+}
+
+.chat-send-btn {
+  background: #4285F4;
+  color: white;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-weight: bold;
+}
