@@ -48,7 +48,7 @@ export default function LandingPage() {
               color: 'white', 
               border: 'none', 
               padding: '8px 20px', 
-              borderRadius: '20px', 
+              //borderRadius: '20px', 
               fontWeight: 'bold',
               cursor: 'pointer'
             }}>
