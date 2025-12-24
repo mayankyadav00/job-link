@@ -101,7 +101,7 @@ export default function LandingPage() {
       </main>
 
       <footer style={{ textAlign: 'center', padding: '20px', color: '#888', fontSize: '0.8rem' }}>
-        Powered by Google Technology
+        Powered by Falcons
       </footer>
     </div>
   );
