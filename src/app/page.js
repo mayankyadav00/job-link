@@ -4,7 +4,7 @@ import { Globe } from 'lucide-react'; // Optional: Remove if you don't have icon
 
 export default function LandingPage() {
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: '#ff0000' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: '#f4f4f4' }}>
       
       {/* --- HEADER WITH LANGUAGE TOGGLE --- */}
       <nav style={{ 
