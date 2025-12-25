@@ -50,11 +50,11 @@ export default function HomeTab() {
         {/* Filter Chips */}
         {['Remote', 'Onsite', 'One Day', 'Long Term', 'Urgent','Remote', 'Onsite', 'One Day', 'Long Term', 'Urgent','Remote', 'Onsite', 'One Day', 'Long Term', 'Urgent','Remote', 'Onsite', 'One Day', 'Long Term', 'Urgent'].map((filter) => (
           <button key={filter} style={{
-           /* padding: '8px 16px',
+            padding: '8px 16px',
             borderRadius: '20px',
             border: '1px solid #ccc',
             background: 'white',
-            flexShrink: 0 // Prevents squishing*/
+            flexShrink: 0 // Prevents squishing
           }}>
             {filter}
           </button>
@@ -100,6 +100,7 @@ export default function HomeTab() {
   );
 
 }
+
 
 
 
