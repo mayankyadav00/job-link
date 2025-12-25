@@ -546,4 +546,8 @@ body {
   font-weight: bold;
 }
 #joblinklogo {
-  text-decoration: none}
+  text-decoration: none;
+}
+#joblinklogo:hover{
+  transform: scale(1.1);
+}
