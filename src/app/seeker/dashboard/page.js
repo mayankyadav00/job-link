@@ -21,7 +21,7 @@ export default function HomeTab() {
         
         {/* Left: Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ width: '30px', height: '30px', background: '#4285F4', borderRadius: '50%' }}></div>
+          <div style={{ width: '32px', height: '32px', background: '#4285F4', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold' }}>J</div>
           <a id="joblinklogo" rel="" href="">
           <span style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#333' }}>JobLink</span>
           </a>
@@ -100,3 +100,4 @@ export default function HomeTab() {
   );
 
 }
+
