@@ -28,7 +28,7 @@ export default function LandingPage() {
         <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
           
           {/* THE LANGUAGE TOGGLE */}
-          <button style={{ 
+          <button class="hover" style={{ 
             display: 'flex', 
             alignItems: 'center', 
             gap: '5px', 
@@ -45,7 +45,7 @@ export default function LandingPage() {
 
           {/* Login Button */}
           <Link href="/login">
-            <button style={{ 
+            <button class="hover" style={{ 
               background: '#333', 
               color: 'white', 
               border: 'none', 
@@ -80,7 +80,7 @@ export default function LandingPage() {
             <h2 style={{ marginBottom: '10px' }}>I Need Work</h2>
             <p style={{ color: '#666', marginBottom: '20px' }}>Find daily shifts, part-time tasks, or full-time jobs.</p>
             <Link href="/seeker/dashboard">
-              <button style={{ width: '100%', padding: '15px', background: '#4285F4', color: 'white', border: 'none', borderRadius: '10px', fontSize: '1.1rem', fontWeight: 'bold', cursor: 'pointer' }}>
+              <button class="hover" style={{ width: '100%', padding: '15px', background: '#4285F4', color: 'white', border: 'none', borderRadius: '10px', fontSize: '1.1rem', fontWeight: 'bold', cursor: 'pointer' }}>
                 Find Jobs
               </button>
             </Link>
@@ -92,7 +92,7 @@ export default function LandingPage() {
             <h2 style={{ marginBottom: '10px' }}>I Need Workers</h2>
             <p style={{ color: '#666', marginBottom: '20px' }}>Hire help for your shop, home, or office instantly.</p>
             <Link href="/provider/dashboard">
-              <button style={{ width: '100%', padding: '15px', background: '#34A853', color: 'white', border: 'none', borderRadius: '10px', fontSize: '1.1rem', fontWeight: 'bold', cursor: 'pointer' }}>
+              <button class="hover" style={{ width: '100%', padding: '15px', background: '#34A853', color: 'white', border: 'none', borderRadius: '10px', fontSize: '1.1rem', fontWeight: 'bold', cursor: 'pointer' }}>
                 Post a Job
               </button>
             </Link>
