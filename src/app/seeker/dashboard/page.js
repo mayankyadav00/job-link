@@ -43,6 +43,7 @@ export default function HomeTab() {
       </div>
 
       {/* ✅ 4. FILTERS SECTION (Interactive) */}
+     <h2>Filter</h2>
       <div style={{ 
         display: 'flex', 
         gap: '10px', 
@@ -118,3 +119,4 @@ export default function HomeTab() {
     </div>
   );
 }
+
