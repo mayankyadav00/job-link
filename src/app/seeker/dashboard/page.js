@@ -70,6 +70,7 @@ export default function HomeTab() {
               borderRadius: '12px',
               padding: '15px',
               marginBottom: '15px',
+              marginLeft: '50px',
               boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
               background: 'white'
             }}>
@@ -100,6 +101,7 @@ export default function HomeTab() {
   );
 
 }
+
 
 
 
