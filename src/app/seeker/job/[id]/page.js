@@ -42,6 +42,15 @@ const allJobs = [
     description: "Leakage in main water tank. Need immediate repair.",
     requirements: ["Plumbing Tools", "Experience"],
     isUrgent: true
+  },
+  {
+    id: 5,
+    title: "Shop Staff",
+    location: "Ashok Rajpath",
+    pay: "Negotiable",
+    description: "Need a skilled staff for grocery store for two days.",
+    requirements: ["Communication", "Packing skill", "Avioding skill for  negotation"],
+    isUrgent: true
   }
 ];
 
@@ -112,4 +121,5 @@ export default function JobDetailsPage() {
       </main>
     </div>
   );
+
 }
