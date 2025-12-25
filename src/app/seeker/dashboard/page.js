@@ -8,7 +8,7 @@ export default function HomeTab() {
   // Mock Data
   const jobs = [
     { id: 1, title: "Dishwasher", pay: "₹400/day", type: "One Day", loc: "Patna" },
-    { id: 2, title: "React Dev", pay: "₹25k/mo", type: "Long Term", loc: "Remote" },
+    { id: 2, title: "React JS Dev", pay: "₹25k/mo", type: "Long Term", loc: "Remote" },
     { id: 3, title: "Delivery", pay: "₹100/trip", type: "Part Time", loc: "Local" },
     { id: 4, title: "Painter", pay: "₹800/day", type: "One Day", loc: "Kankarbagh" },
     { id: 5, title: "Shop staff", pay: "₹500/day", type: "Two days", loc: "Ashok Rajpath" }
@@ -100,6 +100,7 @@ export default function HomeTab() {
   );
 
 }
+
 
 
 
