@@ -67,8 +67,8 @@ export default function HomeTab() {
       {/* HEADER */}
       <div style={{ padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'white', boxShadow: '0 2px 5px rgba(0,0,0,0.05)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ width: '30px', height: '30px', background: '#4285F4', borderRadius: '50%' }}></div>
-          <h1 style={{ fontSize: '1.5rem', margin: 0 }}>JobLink</h1>
+          <div style={{ width: '30px', height: '30px', background: '#4285F4', borderRadius: '50%' }}>J</div>
+          <h1 class="hover" style={{ fontSize: '1.5rem', margin: 0 }}>JobLink</h1>
         </div>
         
         {/* THE NEW FILTER TRIGGER BUTTON */}
@@ -86,7 +86,7 @@ export default function HomeTab() {
             cursor: 'pointer'
           }}
         >
-          <span>Filter</span>
+          <span class="hover">Filter</span>
           <Filter size={16} />
         </button>
       </div>
@@ -104,7 +104,7 @@ export default function HomeTab() {
            </div>
         ) : (
           filteredJobs.map((job) => (
-            <Link href={`/seeker/job/${job.id}`} key={job.id} style={{ textDecoration: 'none', color: 'inherit' }}>
+            <Link class="hover" href={`/seeker/job/${job.id}`} key={job.id} style={{ textDecoration: 'none', color: 'inherit' }}>
               <div style={{
                 border: '1px solid #eee',
                 borderRadius: '12px',
@@ -228,3 +228,4 @@ export default function HomeTab() {
     </div>
   );
 }
+
