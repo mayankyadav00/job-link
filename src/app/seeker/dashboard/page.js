@@ -40,6 +40,7 @@ export default function HomeTab() {
       </div>
 
       {/* 2. FILTERS (Horizontal Scroll) */}
+    <div>
       <div style={{ 
         display: 'flex', 
         gap: '10px', 
@@ -90,6 +91,7 @@ export default function HomeTab() {
                 {job.type}
               </span>
             </div>
+          </div>
           </Link>
         ))}
       </div>
@@ -100,6 +102,7 @@ export default function HomeTab() {
   );
 
 }
+
 
 
 
