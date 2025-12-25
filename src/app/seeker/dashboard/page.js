@@ -38,9 +38,7 @@ export default function HomeTab() {
             🌐 EN / HI
         </button>
       </div>
-
       {/* 2. FILTERS (Horizontal Scroll) */}
-    <div>
       <div style={{ 
         display: 'flex', 
         gap: '10px', 
@@ -48,6 +46,7 @@ export default function HomeTab() {
         padding: '0 20px 20px 20px',
         whiteSpace: 'nowrap'
       }}>
+<div>
         {/* Filter Chips */}
         {['Remote', 'Onsite', 'One Day', 'Long Term', 'Urgent'].map((filter) => (
           <button key={filter} style={{
@@ -79,6 +78,7 @@ export default function HomeTab() {
                 <span>📍 {job.loc}</span>
                 <span>💰 {job.pay}</span>
               </div>
+          </div>
               <span style={{ 
                 display: 'inline-block', 
                 marginTop: '10px', 
@@ -91,7 +91,6 @@ export default function HomeTab() {
                 {job.type}
               </span>
             </div>
-          </div>
           </Link>
         ))}
       </div>
@@ -102,6 +101,7 @@ export default function HomeTab() {
   );
 
 }
+
 
 
 
