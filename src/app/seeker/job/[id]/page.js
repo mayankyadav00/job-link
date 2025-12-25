@@ -8,7 +8,7 @@ import Link from 'next/link';
 // 1. Same Mock Data as before (In a real app, we fetch this from Database)
 const allJobs = [
   {
-    id: 1,
+    id: 2,
     title: "React JS Developer",
     location: "Remote",
     pay: "₹25,000 / month",
@@ -17,7 +17,7 @@ const allJobs = [
     isUrgent: false
   },
   {
-    id: 2,
+    id: 1,
     title: "Dishwasher Needed",
     location: "Sharma Dhaba, Patna (2km away)",
     pay: "₹400 / day",
@@ -123,3 +123,4 @@ export default function JobDetailsPage() {
   );
 
 }
+
