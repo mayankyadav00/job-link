@@ -48,7 +48,7 @@ export default function HomeTab() {
         whiteSpace: 'nowrap'
       }}>
         {/* Filter Chips */}
-        {['Remote', 'Onsite', 'One Day', 'Long Term', 'Urgent'].map((filter) => (
+        {['Remote', 'Onsite', 'One Day', 'Long Term', 'Urgent','Remote', 'Onsite', 'One Day', 'Long Term', 'Urgent','Remote', 'Onsite', 'One Day', 'Long Term', 'Urgent','Remote', 'Onsite', 'One Day', 'Long Term', 'Urgent'].map((filter) => (
           <button key={filter} style={{
             padding: '8px 16px',
             borderRadius: '20px',
@@ -60,10 +60,6 @@ export default function HomeTab() {
           </button>
         ))}
       </div>
-<div>
-        <div>
-        <h1> M </h1>
-        </div>
       {/* 3. JOB LIST */}
       <div style={{ padding: '0 20px' }}>
         {jobs.map((job) => (
@@ -82,7 +78,6 @@ export default function HomeTab() {
                 <span>📍 {job.loc}</span>
                 <span>💰 {job.pay}</span>
               </div>
-          </div>
               <span style={{ 
                 display: 'inline-block', 
                 marginTop: '10px', 
@@ -105,6 +100,7 @@ export default function HomeTab() {
   );
 
 }
+
 
 
 
