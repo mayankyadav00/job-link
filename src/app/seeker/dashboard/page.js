@@ -65,10 +65,11 @@ export default function HomeTab() {
     <div style={{ paddingBottom: '80px', fontFamily: 'Arial, sans-serif', position: 'relative' }}>
       
       {/* HEADER */}
-      <div style={{ padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'white', boxShadow: '0 2px 5px rgba(0,0,0,0.05)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ width: '30px', height: '30px', background: '#4285F4', borderRadius: '50%' }}>J</div>
-          <h1 class="hover" style={{ fontSize: '1.5rem', margin: 0 }}>JobLink</h1>
+          <div class="hover" style={{ width: '32px', height: '32px', background: '#4285F4', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold' }}>J</div>
+          <a id="joblinklogo" rel="" href="">
+          <span style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#333' }}>JobLink</span>
+          </a>
         </div>
         
         {/* THE NEW FILTER TRIGGER BUTTON */}
@@ -228,4 +229,5 @@ export default function HomeTab() {
     </div>
   );
 }
+
 
