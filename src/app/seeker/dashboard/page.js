@@ -22,7 +22,9 @@ export default function HomeTab() {
         {/* Left: Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{ width: '30px', height: '30px', background: '#4285F4', borderRadius: '50%' }}></div>
-          <h1 style={{ fontSize: '1.5rem', margin: 0 }}>JobLink</h1>
+          <a id="joblinklogo" rel="" href="">
+          <span style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#333' }}>JobLink</span>
+          </a>
         </div>
 
         {/* Right: Language Toggle */}
@@ -96,4 +98,5 @@ export default function HomeTab() {
       <BottomNav />
     </div>
   );
+
 }
