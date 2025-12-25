@@ -19,14 +19,12 @@ export default function ProfileTab() {
 
       {/* 2. Menu Options */}
       <div style={{ background: 'white' }}>
-       {['Account Details', 'Login Info', 'Resume / CV', 'Help & Support'].map((item) => (
+       {['Account Details', 'Resume / CV', 'Help & Support- Comming soon!'].map((item) => (
           <div key={item} style={{ padding: '20px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between' }}>
             <span>{item}</span>
             <span style={{ color: '#ccc' }}>›</span>
           </div>
         ))}
-<span>Account Details</span>
-<span>Login Info</span>
         {/* Log Out */}
         <Link href="/" style={{ textDecoration: 'none' }}>
             <div style={{ padding: '20px', color: 'red', fontWeight: 'bold' }}>
@@ -40,4 +38,5 @@ export default function ProfileTab() {
   );
 
 }
+
 
