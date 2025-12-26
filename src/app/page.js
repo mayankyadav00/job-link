@@ -24,9 +24,20 @@ export default function LandingPage() {
           </a>
         </div>
 
-        {/* Right Side: Language & Login */}
+        {/* Right Side: Language & Login & darkmode */}
         <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-          
+          <button class = "mode" style={{
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '5px', 
+            padding: '8px 12px', 
+            border: '1px solid #ccc', 
+            borderRadius: '20px', 
+            background: 'white', 
+            cursor: 'pointer',
+            fontSize: '0.9rem'
+         }}>
+            <span> 🔆 </span> 
           {/* THE LANGUAGE TOGGLE */}
           <button class="hover" style={{ 
             display: 'flex', 
