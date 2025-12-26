@@ -82,7 +82,7 @@ export default function HomeTab() {
         boxShadow: isDarkMode ? '0 2px 10px rgba(0,0,0,0.3)' : '0 2px 5px rgba(0,0,0,0.05)',
         transition: 'background 0.3s ease'
       }}>
-        <a rel="stylesheet" href="https://job-link-black.vercel.app/">
+        <a id="joblinklogo" rel="stylesheet" href="https://job-link-black.vercel.app/">
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div class="hover" style={{ width: '32px', height: '32px', background: '#4285F4', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold' }}>J</div>
           <span class="hover" style={{ fontSize: '1.25rem', fontWeight: 'bold', color: theme.textMain }}>JobLink</span>
@@ -238,5 +238,6 @@ export default function HomeTab() {
     </div>
   );
 }
+
 
 
