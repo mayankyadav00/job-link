@@ -1,18 +1,23 @@
-"use client"; // Required for interactivity in Next.js
+"use client"; 
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 
 export default function LandingPage() {
-  // 1. State to track theme
   const [isDarkMode, setIsDarkMode] = useState(false);
+  
+  // 1. ADD STATE FOR LANGUAGE
+  const [isHindi, setIsHindi] = useState(false);
 
-  // 2. Toggle function
   const toggleTheme = () => {
     setIsDarkMode(!isDarkMode);
   };
 
-  // 3. Define Theme Styles
+  // 2. TOGGLE LANGUAGE FUNCTION
+  const toggleLanguage = () => {
+    setIsHindi(!isHindi);
+  };
+
   const theme = {
     bg: isDarkMode ? '#1a1a1a' : '#f4f4f4',
     navBg: isDarkMode ? '#2d2d2d' : 'white',
@@ -27,12 +32,11 @@ export default function LandingPage() {
       minHeight: '100vh', 
       display: 'flex', 
       flexDirection: 'column', 
-      backgroundColor: theme.bg, // Dynamic Background
-      color: theme.textMain,     // Dynamic Text
-      transition: 'all 0.3s ease' // Smooth transition
+      backgroundColor: theme.bg, 
+      color: theme.textMain,     
+      transition: 'all 0.3s ease' 
     }}>
       
-      {/* --- HEADER --- */}
       <nav style={{ 
         display: 'flex', 
         justifyContent: 'space-between', 
@@ -43,17 +47,14 @@ export default function LandingPage() {
         transition: 'background 0.3s ease'
       }}>
         
-        {/* Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div class="hover" style={{ width: '32px', height: '32px', background: '#4285F4', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold' }}>J</div>
-          <span class="hover" style={{ fontSize: '1.25rem', fontWeight: 'bold', color: theme.textMain }}>JobLink</span>
+          <div className="hover" style={{ width: '32px', height: '32px', background: '#4285F4', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold' }}>J</div>
+          <span className="hover" style={{ fontSize: '1.25rem', fontWeight: 'bold', color: theme.textMain }}>JobLink</span>
         </div>
 
-        {/* Right Side Tools */}
         <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
           
-          {/* THE WORKING TOGGLE BUTTON */}
-          <button class="hover"
+          <button className="hover"
             onClick={toggleTheme}
             style={{
               background: isDarkMode ? '#444' : '#eee',
@@ -70,23 +71,30 @@ export default function LandingPage() {
             {isDarkMode ? '🌙' : '☀️'}
           </button>
 
-          <button class="hover" style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '5px', 
-            padding: '8px 12px', 
-            border: `1px solid ${theme.border}`, 
-            borderRadius: '20px', 
-            background: theme.navBg, 
-            color: theme.textMain,
-            cursor: 'pointer',
-            fontSize: '0.9rem'
-          }}>
+          {/* 3. UPDATED LANGUAGE BUTTON */}
+          <button 
+            className="hover" 
+            onClick={toggleLanguage} // Call toggle function
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '5px', 
+              padding: '8px 12px', 
+              border: `1px solid ${theme.border}`, 
+              borderRadius: '20px', 
+              background: isHindi ? '#4285F4' : theme.navBg, // Changes color when active
+              color: isHindi ? 'white' : theme.textMain,
+              cursor: 'pointer',
+              fontSize: '0.9rem',
+              fontWeight: 'bold',
+              transition: '0.3s'
+            }}
+          >
             <span>🌐</span>
-            <span>EN / HI</span>
+            <span>{isHindi ? 'HI / EN' : 'EN / HI'}</span>
           </button>
 
-          <Link class="hover" href="/login">
+          <Link className="hover" href="/login">
             <button style={{ 
               background: isDarkMode ? '#f4f4f4' : '#333', 
               color: isDarkMode ? '#333' : 'white', 
@@ -96,20 +104,22 @@ export default function LandingPage() {
               fontWeight: 'bold',
               cursor: 'pointer'
             }}>
-              Login
+              {isHindi ? 'लॉगिन' : 'Login'}
             </button>
           </Link>
         </div>
       </nav>
 
-      {/* --- MAIN CONTENT --- */}
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
         
         <div style={{ textAlign: 'center', marginBottom: '40px', marginTop: '20px' }}>
+          {/* 4. TRANSLATED TITLES */}
           <h1 style={{ fontSize: '2.5rem', marginBottom: '10px', color: theme.textMain }}>
-            Find Work. <span style={{ color: '#34A853' }}>Hire Local.</span>
+            {isHindi ? 'काम खोजें।' : 'Find Work.'} <span style={{ color: '#34A853' }}>{isHindi ? 'स्थानीय नियुक्त करें।' : 'Hire Local.'}</span>
           </h1>
-          <p style={{ color: theme.textSub, fontSize: '1.1rem' }}>The bridge between local workers and daily needs.</p>
+          <p style={{ color: theme.textSub, fontSize: '1.1rem' }}>
+            {isHindi ? 'स्थानीय श्रमिकों और दैनिक जरूरतों के बीच का सेतु।' : 'The bridge between local workers and daily needs.'}
+          </p>
         </div>
 
         <div style={{ display: 'flex', gap: '20px', width: '100%', maxWidth: '800px', flexWrap: 'wrap' }}>
@@ -127,11 +137,15 @@ export default function LandingPage() {
             transition: 'background 0.3s ease'
           }}>
             <div style={{ fontSize: '3rem', marginBottom: '10px' }}>🔍</div>
-            <h2 style={{ marginBottom: '10px', color: theme.textMain }}>I Need Work</h2>
-            <p style={{ color: theme.textSub, marginBottom: '20px' }}>Find daily shifts, part-time tasks, or full-time jobs.</p>
+            <h2 style={{ marginBottom: '10px', color: theme.textMain }}>
+                {isHindi ? 'मुझे काम चाहिए' : 'I Need Work'}
+            </h2>
+            <p style={{ color: theme.textSub, marginBottom: '20px' }}>
+                {isHindi ? 'दैनिक शिफ्ट, पार्ट-टाइम काम या फुल-टाइम नौकरियां खोजें।' : 'Find daily shifts, part-time tasks, or full-time jobs.'}
+            </p>
             <Link href="/seeker/dashboard">
-              <button class="hover" style={{ width: '100%', padding: '15px', background: '#4285F4', color: 'white', border: 'none', borderRadius: '10px', fontSize: '1.1rem', fontWeight: 'bold', cursor: 'pointer' }}>
-                Find Jobs
+              <button className="hover" style={{ width: '100%', padding: '15px', background: '#4285F4', color: 'white', border: 'none', borderRadius: '10px', fontSize: '1.1rem', fontWeight: 'bold', cursor: 'pointer' }}>
+                {isHindi ? 'नौकरियां खोजें' : 'Find Jobs'}
               </button>
             </Link>
           </div>
@@ -149,11 +163,15 @@ export default function LandingPage() {
             transition: 'background 0.3s ease'
           }}>
             <div style={{ fontSize: '3rem', marginBottom: '10px' }}>📢</div>
-            <h2 style={{ marginBottom: '10px', color: theme.textMain }}>I Need Workers</h2>
-            <p style={{ color: theme.textSub, marginBottom: '20px' }}>Hire help for your shop, home, or office instantly.</p>
+            <h2 style={{ marginBottom: '10px', color: theme.textMain }}>
+                {isHindi ? 'मुझे वर्कर चाहिए' : 'I Need Workers'}
+            </h2>
+            <p style={{ color: theme.textSub, marginBottom: '20px' }}>
+                {isHindi ? 'अपने दुकान, घर या ऑफिस के लिए तुरंत मदद लें।' : 'Hire help for your shop, home, or office instantly.'}
+            </p>
             <Link href="/provider/dashboard">
-              <button class="hover" style={{ width: '100%', padding: '15px', background: '#34A853', color: 'white', border: 'none', borderRadius: '10px', fontSize: '1.1rem', fontWeight: 'bold', cursor: 'pointer' }}>
-                Post a Job
+              <button className="hover" style={{ width: '100%', padding: '15px', background: '#34A853', color: 'white', border: 'none', borderRadius: '10px', fontSize: '1.1rem', fontWeight: 'bold', cursor: 'pointer' }}>
+                {isHindi ? 'काम पोस्ट करें' : 'Post a Job'}
               </button>
             </Link>
           </div>
@@ -161,7 +179,7 @@ export default function LandingPage() {
       </main>
 
       <footer style={{ textAlign: 'center', padding: '20px', color: theme.textSub, fontSize: '0.8rem' }}>
-        Powered by Falcons
+        {isHindi ? 'Falcons द्वारा संचालित' : 'Powered by Falcons'}
       </footer>
     </div>
   );
