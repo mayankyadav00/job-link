@@ -17,10 +17,8 @@ export default function HomeTab() {
 
   // --- 3. GOOGLE TRANSLATE & LOCALSTORAGE SYNC ---
   useEffect(() => {
-    // Sync Theme
     if (localStorage.getItem('theme') === 'dark') setIsDarkMode(true);
 
-    // Inject Google Translate only if not present
     const addScript = () => {
       if (document.getElementById('google-translate-script')) return;
       const script = document.createElement('script');
@@ -98,15 +96,13 @@ export default function HomeTab() {
         </div>
         
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          {/* Google Translate Dropdown */}
-          <div id="google_translate_element" style={{ maxHeight: '36px' }}></div>
+          {/* Google Translate Dropdown Container */}
+          <div id="google_translate_element" style={{ maxHeight: '36px', minWidth: '130px' }}></div>
 
-          {/* Theme Button */}
           <button onClick={toggleTheme} style={{ background: 'transparent', border: `1px solid ${theme.border}`, width: '36px', height: '36px', borderRadius: '50%', cursor: 'pointer', color: theme.textMain, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
           </button>
 
-          {/* Filter Button - FIXED ACTION */}
           <button onClick={() => setIsFilterOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 15px', height: '36px', background: theme.filterBtn, border: 'none', borderRadius: '20px', fontWeight: 'bold', cursor: 'pointer', color: theme.textMain }}>
             <Filter size={16} />
             <span>Filter</span>
@@ -114,7 +110,7 @@ export default function HomeTab() {
         </div>
       </div>
 
-      {/* JOB LIST - FIXED CLICKABLE LINKS */}
+      {/* JOB LIST */}
       <div style={{ padding: '20px' }}>
         <p style={{ color: theme.textSub, fontSize: '0.9rem', marginBottom: '15px' }}>Found {filteredJobs.length} jobs.</p>
 
@@ -132,7 +128,7 @@ export default function HomeTab() {
         ))}
       </div>
 
-      {/* FILTER MODAL - FIXED FUNCTIONALITY */}
+      {/* FILTER MODAL */}
       {isFilterOpen && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 2000, display: 'flex', justifyContent: 'flex-end' }}>
           <div style={{ width: '85%', maxWidth: '380px', height: '100%', backgroundColor: theme.navBg, color: theme.textMain, padding: '25px', overflowY: 'auto', boxShadow: '-5px 0 20px rgba(0,0,0,0.2)' }}>
@@ -161,10 +157,40 @@ export default function HomeTab() {
       )}
 
       <BottomNav />
+
+      {/* FIXED CSS FOR GOOGLE TRANSLATE OVERLAYS */}
       <style jsx global>{`
-        .goog-te-banner-frame.skiptranslate, .goog-te-gadget-icon { display: none !important; }
-        body { top: 0px !important; }
-        .goog-te-gadget-simple { background: transparent !important; border: 1px solid #ccc !important; padding: 4px 8px !important; border-radius: 20px !important; }
+        /* 1. Prevent Google from pushing the body down or covering the header */
+        iframe.goog-te-banner-frame {
+          display: none !important;
+        }
+        body {
+          top: 0px !important;
+        }
+        .goog-te-gadget {
+          font-family: Arial, sans-serif !important;
+        }
+
+        /* 2. Style the dropdown button to fit your design */
+        .goog-te-gadget-simple {
+          background-color: transparent !important;
+          border: 1px solid ${isDarkMode ? '#444' : '#ccc'} !important;
+          padding: 4px 8px !important;
+          border-radius: 20px !important;
+          cursor: pointer !important;
+          display: flex !important;
+          align-items: center !important;
+        }
+
+        /* 3. Hide the Google Logo/Icon inside the button */
+        .goog-te-gadget-icon {
+          display: none !important;
+        }
+
+        /* 4. Fix for dropdown disappearing - ensuring z-index visibility */
+        .goog-te-menu-frame {
+          z-index: 999999 !important;
+        }
       `}</style>
     </div>
   );
