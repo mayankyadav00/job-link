@@ -557,23 +557,3 @@ body {
   transition: transform 0.2s
 }
 
-.light {
-    background-color: white;
-    color : rgb(0, 0, 0);
-    transition: background-color 0.1s, color 0.1s;
-}
-
-.light:hover {
-    transform: scale(1);
-}
-
-.dark {
-    background-color: black;
-    color: white;
-    transition: background-color 0.1s, color 0.1s;
-}
-
-
-.dark:hover {
-    transform: scale(1);
-}
