@@ -1,4 +1,23 @@
 // src/app/page.js
+const toggleBtn = document.getElementById('theme-toggle');
+const body = document.body;
+
+toggleBtn.addEventListener('click', () => {
+  // Check current theme
+  const isDark = body.getAttribute('data-theme') === 'dark';
+  
+  // Toggle the attribute
+  if (isDark) {
+    body.removeAttribute('data-theme');
+    toggleBtn.innerHTML = '☀️'; // Change icon to sun
+  } else {
+    body.setAttribute('data-theme', 'dark');
+    toggleBtn.innerHTML = '🌙'; // Change icon to moon
+  }
+  
+  // Optional: Save preference in local storage so it stays after refresh
+  localStorage.setItem('theme', isDark ? 'light' : 'dark');
+});
 import Link from 'next/link';
 import { Globe } from 'lucide-react'; // Optional: Remove if you don't have icons yet
 
