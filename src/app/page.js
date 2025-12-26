@@ -38,6 +38,7 @@ export default function LandingPage() {
             fontSize: '0.9rem'
          }}>
             <span> 🔆 </span> 
+          </button>
           {/* THE LANGUAGE TOGGLE */}
           <button class="hover" style={{ 
             display: 'flex', 
