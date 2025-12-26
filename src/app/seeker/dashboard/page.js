@@ -83,8 +83,8 @@ export default function HomeTab() {
         transition: 'background 0.3s ease'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ width: '30px', height: '30px', background: '#4285F4', borderRadius: '50%' }}></div>
-          <h1 style={{ fontSize: '1.5rem', margin: 0, color: theme.textMain }}>JobLink</h1>
+          <div class="hover" style={{ width: '32px', height: '32px', background: '#4285F4', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold' }}>J</div>
+          <span class="hover" style={{ fontSize: '1.25rem', fontWeight: 'bold', color: theme.textMain }}>JobLink</span>
         </div>
         
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
@@ -236,3 +236,4 @@ export default function HomeTab() {
     </div>
   );
 }
+
