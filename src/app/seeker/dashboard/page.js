@@ -2,29 +2,44 @@
 import { BottomNav } from '../../../components/BottomNav';
 import Link from 'next/link';
 import { useState, useEffect } from 'react'; 
-import { X, Filter, Sun, Moon, Globe } from 'lucide-react'; 
+import { X, Filter, Sun, Moon } from 'lucide-react'; 
 
 export default function HomeTab() {
   
-  // --- THEME & LANGUAGE STATE ---
+  // --- THEME STATE ---
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [isHindi, setIsHindi] = useState(false);
 
   useEffect(() => {
+    // 1. Sync Theme with localStorage
     if (localStorage.getItem('theme') === 'dark') setIsDarkMode(true);
-    if (localStorage.getItem('language') === 'hindi') setIsHindi(true);
+
+    // 2. GOOGLE TRANSLATE SCRIPT INJECTION
+    const addGoogleTranslateScript = () => {
+      // Avoid duplicate script injection
+      if (document.getElementById('google-translate-script')) return;
+
+      const script = document.createElement('script');
+      script.id = 'google-translate-script';
+      script.src = "//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
+      script.async = true;
+      document.body.appendChild(script);
+
+      window.googleTranslateElementInit = () => {
+        new window.google.translate.TranslateElement({
+          pageLanguage: 'en',
+          includedLanguages: 'en,hi', // Limits options to English and Hindi
+          layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE
+        }, 'google_translate_element');
+      };
+    };
+
+    addGoogleTranslateScript();
   }, []);
 
   const toggleTheme = () => {
     const next = !isDarkMode;
     setIsDarkMode(next);
     localStorage.setItem('theme', next ? 'dark' : 'light');
-  };
-
-  const toggleLanguage = () => {
-    const next = !isHindi;
-    setIsHindi(next);
-    localStorage.setItem('language', next ? 'hindi' : 'english');
   };
 
   const theme = {
@@ -40,17 +55,15 @@ export default function HomeTab() {
   // --- FILTER STATES ---
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedFilters, setSelectedFilters] = useState({
-    workMode: [],
-    department: [],
-    duration: []
+    workMode: [], department: [], duration: []
   });
 
   const jobs = [
-    { id: 1, title: isHindi ? "तत्काल प्लंबर की आवश्यकता" : "Urgent Plumber Needed", pay: "₹500/visit", workMode: "Area around NIT Patna", department: "Plumber", duration: "Short time (hours)" },
-    { id: 2, title: isHindi ? "घरेलू इलेक्ट्रीशियन" : "Home Electrician", pay: "₹800/day", workMode: "Patna Junction", department: "Electrician", duration: "One day" },
-    { id: 3, title: isHindi ? "फुल टाइम क्लीनर" : "Full Time Cleaner", pay: "₹12k/mo", workMode: "Work from home", department: "Cleaner", duration: "Long term" },
-    { id: 4, title: isHindi ? "रिमोट सपोर्ट स्टाफ" : "Remote Support Staff", pay: "₹15k/mo", workMode: "Remote Area", department: "Electrician", duration: "Long term" },
-    { id: 5, title: isHindi ? "पाइप फिटिंग हेल्पर" : "Pipe Fitting Helper", pay: "₹300/hour", workMode: "Area around NIT Patna", department: "Plumber", duration: "Short time (hours)" },
+    { id: 1, title: "Urgent Plumber Needed", pay: "₹500/visit", workMode: "Area around NIT Patna", department: "Plumber", duration: "Short time (hours)" },
+    { id: 2, title: "Home Electrician", pay: "₹800/day", workMode: "Patna Junction", department: "Electrician", duration: "One day" },
+    { id: 3, title: "Full Time Cleaner", pay: "₹12k/mo", workMode: "Work from home", department: "Cleaner", duration: "Long term" },
+    { id: 4, title: "Remote Support Staff", pay: "₹15k/mo", workMode: "Remote Area", department: "Electrician", duration: "Long term" },
+    { id: 5, title: "Pipe Fitting Helper", pay: "₹300/hour", workMode: "Area around NIT Patna", department: "Plumber", duration: "Short time (hours)" },
   ];
 
   const handleCheckboxChange = (category, value) => {
@@ -72,44 +85,15 @@ export default function HomeTab() {
   });
 
   const filterOptions = {
-    workMode: [
-      { en: "Work from home", hi: "घर से कार्य" },
-      { en: "Remote Area", hi: "रिमोट एरिया" },
-      { en: "Area around NIT Patna", hi: "NIT पटना के पास" },
-      { en: "Patna Junction", hi: "पटना जंक्शन" }
-    ],
-    department: [
-      { en: "Plumber", hi: "प्लंबर" },
-      { en: "Electrician", hi: "इलेक्ट्रीशियन" },
-      { en: "Cleaner", hi: "क्लीनर" }
-    ],
-    duration: [
-      { en: "Short time (hours)", hi: "कम समय (घंटे)" },
-      { en: "One day", hi: "एक दिन" },
-      { en: "Long term", hi: "लंबे समय" }
-    ]
-  };
-
-  // COMMON STYLE FOR CIRCULAR ACTION BUTTONS (Theme & Language)
-  const actionButtonStyle = {
-    background: theme.filterBtn,
-    border: 'none',
-    width: '40px',
-    height: '40px',
-    borderRadius: '50%',
-    cursor: 'pointer',
-    color: theme.textMain,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    transition: '0.3s'
+    workMode: ["Work from home", "Remote Area", "Area around NIT Patna", "Patna Junction"],
+    department: ["Plumber", "Electrician", "Cleaner"],
+    duration: ["Short time (hours)", "One day", "Long term"]
   };
 
   return (
     <div style={{ 
       paddingBottom: '80px', 
       fontFamily: 'Arial, sans-serif', 
-      position: 'relative',
       backgroundColor: theme.bg,
       minHeight: '100vh',
       color: theme.textMain,
@@ -118,49 +102,49 @@ export default function HomeTab() {
       
       {/* HEADER */}
       <div style={{ 
-        padding: '15px 20px', 
+        padding: '12px 20px', 
         display: 'flex', 
         justifyContent: 'space-between', 
         alignItems: 'center', 
         background: theme.navBg, 
         boxShadow: isDarkMode ? '0 2px 10px rgba(0,0,0,0.3)' : '0 2px 5px rgba(0,0,0,0.05)',
-        transition: 'background 0.3s ease'
+        position: 'sticky',
+        top: 0,
+        zIndex: 100
       }}>
+        {/* Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{ width: '32px', height: '32px', background: '#4285F4', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold' }}>J</div>
-          <span style={{ fontSize: '1.25rem', fontWeight: 'bold', color: theme.textMain }}>JobLink</span>
+          <span style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>JobLink</span>
         </div>
         
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+        {/* Controls */}
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
           
-          {/* UNIFIED LANGUAGE BUTTON (Now Circular to match Theme) */}
-          <button 
-            onClick={toggleLanguage}
-            title="Toggle Language"
-            style={{
-              ...actionButtonStyle,
-              background: isHindi ? '#4285F4' : theme.filterBtn,
-              color: isHindi ? 'white' : theme.textMain,
-              fontSize: '0.75rem',
-              fontWeight: 'bold',
-              flexDirection: 'column',
-              gap: '2px'
-            }}
-          >
-            <Globe size={14} />
-            <span style={{ fontSize: '10px', lineHeight: '1' }}>{isHindi ? "HI" : "EN"}</span>
-          </button>
+          {/* THE GOOGLE TRANSLATE TARGET ELEMENT */}
+          <div id="google_translate_element" style={{
+            maxHeight: '36px',
+            overflow: 'hidden'
+          }}></div>
 
-          {/* UNIFIED THEME BUTTON */}
           <button 
             onClick={toggleTheme}
-            title="Toggle Theme"
-            style={actionButtonStyle}
+            style={{
+              background: 'transparent',
+              border: `1px solid ${theme.border}`,
+              width: '36px',
+              height: '36px',
+              borderRadius: '50%',
+              cursor: 'pointer',
+              color: theme.textMain,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
           >
             {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
           </button>
 
-          {/* FILTER TRIGGER BUTTON (Stays rounded-pill as per standard UI) */}
           <button 
             onClick={() => setIsFilterOpen(true)}
             style={{ 
@@ -168,7 +152,7 @@ export default function HomeTab() {
               alignItems: 'center', 
               gap: '8px', 
               padding: '0 15px', 
-              height: '40px',
+              height: '36px',
               background: theme.filterBtn, 
               border: 'none', 
               borderRadius: '20px', 
@@ -177,115 +161,51 @@ export default function HomeTab() {
               color: theme.textMain
             }}
           >
-            <span>{isHindi ? "फ़िल्टर" : "Filter"}</span>
             <Filter size={16} />
+            <span className="notranslate">Filter</span>
           </button>
         </div>
       </div>
 
-      {/* JOB LIST */}
+      {/* Main Content */}
       <div style={{ padding: '20px' }}>
         <p style={{ color: theme.textSub, fontSize: '0.9rem', marginBottom: '15px' }}>
-          {isHindi 
-            ? `आपकी पसंद के आधार पर ${filteredJobs.length} नौकरियां मिलीं।` 
-            : `Found ${filteredJobs.length} jobs based on your preferences.`}
+          Found {filteredJobs.length} jobs based on your preferences.
         </p>
 
-        {filteredJobs.length === 0 ? (
-           <div style={{ textAlign: 'center', marginTop: '50px', color: theme.textSub }}>
-             <p>{isHindi ? "कोई नौकरी मेल नहीं खाती।" : "No jobs match these filters."}</p>
-             <button onClick={() => setSelectedFilters({ workMode: [], department: [], duration: [] })} style={{ color: '#4285F4', textDecoration: 'underline', border: 'none', background: 'none', cursor: 'pointer' }}>
-                {isHindi ? "फ़िल्टर साफ़ करें" : "Clear all filters"}
-             </button>
-           </div>
-        ) : (
-          filteredJobs.map((job) => (
-            <Link href={`/seeker/job/${job.id}`} key={job.id} style={{ textDecoration: 'none', color: 'inherit' }}>
-              <div style={{
-                border: `1px solid ${theme.border}`,
-                borderRadius: '12px',
-                padding: '15px',
-                marginBottom: '15px',
-                boxShadow: isDarkMode ? 'none' : '0 2px 5px rgba(0,0,0,0.05)',
-                background: theme.cardBg,
-                transition: 'all 0.3s ease'
-              }}>
-                <h3 style={{ margin: '0 0 5px 0', color: theme.textMain }}>{job.title}</h3>
-                <p style={{ margin: '0 0 10px 0', color: theme.textSub, fontSize: '0.9rem' }}>
-                  {job.department} • {job.workMode}
-                </p>
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <span style={{ background: isDarkMode ? '#1e3a5f' : '#e3f2fd', color: isDarkMode ? '#6ab7ff' : '#1565c0', padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem' }}>{job.duration}</span>
-                  <span style={{ background: isDarkMode ? '#1b3320' : '#e8f5e9', color: isDarkMode ? '#81c784' : '#2e7d32', padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem' }}>{job.pay}</span>
-                </div>
-              </div>
-            </Link>
-          ))
-        )}
+        {filteredJobs.map((job) => (
+          <div key={job.id} style={{
+            border: `1px solid ${theme.border}`,
+            borderRadius: '16px',
+            padding: '20px',
+            marginBottom: '15px',
+            background: theme.cardBg,
+          }}>
+            <h3 style={{ margin: '0 0 8px 0', color: theme.textMain }}>{job.title}</h3>
+            <p style={{ margin: '0 0 12px 0', color: theme.textSub, fontSize: '0.9rem' }}>
+              {job.department} • {job.workMode}
+            </p>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <span style={{ background: isDarkMode ? '#1e3a5f' : '#e3f2fd', color: isDarkMode ? '#6ab7ff' : '#1565c0', padding: '6px 12px', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 'bold' }}>{job.duration}</span>
+              <span style={{ background: isDarkMode ? '#1b3320' : '#e8f5e9', color: isDarkMode ? '#81c784' : '#2e7d32', padding: '6px 12px', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 'bold' }}>{job.pay}</span>
+            </div>
+          </div>
+        ))}
       </div>
 
-      {/* --- FILTER POPUP (MODAL) --- */}
-      {isFilterOpen && (
-        <div style={{
-          position: 'fixed',
-          top: 0, left: 0,
-          width: '100%', height: '100%',
-          backgroundColor: 'rgba(0,0,0,0.7)', 
-          zIndex: 2000,
-          display: 'flex',
-          justifyContent: 'flex-end'
-        }}>
-          <div style={{
-            width: '85%', maxWidth: '400px', height: '100%',
-            backgroundColor: theme.navBg,
-            color: theme.textMain,
-            padding: '25px',
-            overflowY: 'auto',
-            boxShadow: '-5px 0 15px rgba(0,0,0,0.3)',
-            animation: 'slideIn 0.3s ease-out'
-          }}>
-            
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
-              <h2 style={{ margin: 0 }}>{isHindi ? "फ़िल्टर" : "Listing Filters"}</h2>
-              <button onClick={() => setIsFilterOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme.textMain }}>
-                <X size={24} />
-              </button>
-            </div>
-
-            {[
-              { title: isHindi ? "कार्य मोड" : "Work Mode", key: "workMode", options: filterOptions.workMode },
-              { title: isHindi ? "विभाग" : "Department", key: "department", options: filterOptions.department },
-              { title: isHindi ? "अवधि" : "Duration", key: "duration", options: filterOptions.duration }
-            ].map((section) => (
-              <div key={section.key} style={{ marginBottom: '30px' }}>
-                <h3 style={{ fontSize: '1rem', marginBottom: '15px' }}>{section.title}</h3>
-                {section.options.map(option => (
-                  <label key={option.en} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px', cursor: 'pointer' }}>
-                    <input 
-                      type="checkbox" 
-                      checked={selectedFilters[section.key].includes(option.en)}
-                      onChange={() => handleCheckboxChange(section.key, option.en)}
-                      style={{ transform: 'scale(1.2)' }}
-                    />
-                    <span style={{ color: theme.textSub }}>{isHindi ? option.hi : option.en}</span>
-                  </label>
-                ))}
-              </div>
-            ))}
-
-            <button 
-              onClick={() => setIsFilterOpen(false)}
-              style={{ width: '100%', padding: '15px', background: '#4285F4', color: 'white', border: 'none', borderRadius: '10px', fontSize: '1rem', fontWeight: 'bold', cursor: 'pointer' }}
-            >
-              {isHindi ? "फिल्टर लागू करें" : "Apply Filters"}
-            </button>
-          </div>
-        </div>
-      )}
-
       <BottomNav />
-      
+
+      {/* CSS to hide Google Translate Bar and Banner */}
       <style jsx global>{`
+        .goog-te-banner-frame.skiptranslate, .goog-te-gadget-icon { display: none !important; }
+        body { top: 0px !important; }
+        .goog-te-gadget-simple {
+          background-color: transparent !important;
+          border: 1px solid #ccc !important;
+          padding: 5px !important;
+          border-radius: 20px !important;
+          font-size: 12px !important;
+        }
         @keyframes slideIn {
           from { transform: translateX(100%); }
           to { transform: translateX(0); }
