@@ -39,6 +39,7 @@ export default function LandingPage() {
          }}>
             <span> 🔆 </span> 
           </button>
+          <script src="DOM.js"></script>
           {/* THE LANGUAGE TOGGLE */}
           <button class="hover" style={{ 
             display: 'flex', 
