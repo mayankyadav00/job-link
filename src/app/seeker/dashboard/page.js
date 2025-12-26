@@ -10,7 +10,6 @@ export default function HomeTab() {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isHindi, setIsHindi] = useState(false);
 
-  // Sync with localStorage on load to match the Landing Page
   useEffect(() => {
     if (localStorage.getItem('theme') === 'dark') setIsDarkMode(true);
     if (localStorage.getItem('language') === 'hindi') setIsHindi(true);
@@ -46,7 +45,6 @@ export default function HomeTab() {
     duration: []
   });
 
-  // MOCK DATA (With Title Translations)
   const jobs = [
     { id: 1, title: isHindi ? "तत्काल प्लंबर की आवश्यकता" : "Urgent Plumber Needed", pay: "₹500/visit", workMode: "Area around NIT Patna", department: "Plumber", duration: "Short time (hours)" },
     { id: 2, title: isHindi ? "घरेलू इलेक्ट्रीशियन" : "Home Electrician", pay: "₹800/day", workMode: "Patna Junction", department: "Electrician", duration: "One day" },
@@ -92,6 +90,21 @@ export default function HomeTab() {
     ]
   };
 
+  // COMMON STYLE FOR CIRCULAR ACTION BUTTONS (Theme & Language)
+  const actionButtonStyle = {
+    background: theme.filterBtn,
+    border: 'none',
+    width: '40px',
+    height: '40px',
+    borderRadius: '50%',
+    cursor: 'pointer',
+    color: theme.textMain,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: '0.3s'
+  };
+
   return (
     <div style={{ 
       paddingBottom: '80px', 
@@ -105,7 +118,7 @@ export default function HomeTab() {
       
       {/* HEADER */}
       <div style={{ 
-        padding: '20px', 
+        padding: '15px 20px', 
         display: 'flex', 
         justifyContent: 'space-between', 
         alignItems: 'center', 
@@ -118,54 +131,44 @@ export default function HomeTab() {
           <span style={{ fontSize: '1.25rem', fontWeight: 'bold', color: theme.textMain }}>JobLink</span>
         </div>
         
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
           
-          {/* LANGUAGE TOGGLE BUTTON */}
+          {/* UNIFIED LANGUAGE BUTTON (Now Circular to match Theme) */}
           <button 
             onClick={toggleLanguage}
+            title="Toggle Language"
             style={{
+              ...actionButtonStyle,
               background: isHindi ? '#4285F4' : theme.filterBtn,
-              border: 'none',
-              padding: '8px 12px',
-              borderRadius: '20px',
-              cursor: 'pointer',
               color: isHindi ? 'white' : theme.textMain,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '5px',
-              fontSize: '0.8rem',
+              fontSize: '0.75rem',
               fontWeight: 'bold',
-              transition: '0.3s'
+              flexDirection: 'column',
+              gap: '2px'
             }}
           >
             <Globe size={14} />
-            {isHindi ? "HI" : "EN"}
+            <span style={{ fontSize: '10px', lineHeight: '1' }}>{isHindi ? "HI" : "EN"}</span>
           </button>
 
-          {/* THEME TOGGLE BUTTON */}
+          {/* UNIFIED THEME BUTTON */}
           <button 
             onClick={toggleTheme}
-            style={{
-              background: theme.filterBtn,
-              border: 'none',
-              padding: '8px',
-              borderRadius: '50%',
-              cursor: 'pointer',
-              color: theme.textMain,
-              display: 'flex'
-            }}
+            title="Toggle Theme"
+            style={actionButtonStyle}
           >
             {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
           </button>
 
-          {/* FILTER TRIGGER BUTTON */}
+          {/* FILTER TRIGGER BUTTON (Stays rounded-pill as per standard UI) */}
           <button 
             onClick={() => setIsFilterOpen(true)}
             style={{ 
               display: 'flex', 
               alignItems: 'center', 
               gap: '8px', 
-              padding: '8px 15px', 
+              padding: '0 15px', 
+              height: '40px',
               background: theme.filterBtn, 
               border: 'none', 
               borderRadius: '20px', 
@@ -249,7 +252,6 @@ export default function HomeTab() {
               </button>
             </div>
 
-            {/* Filter Sections */}
             {[
               { title: isHindi ? "कार्य मोड" : "Work Mode", key: "workMode", options: filterOptions.workMode },
               { title: isHindi ? "विभाग" : "Department", key: "department", options: filterOptions.department },
