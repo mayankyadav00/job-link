@@ -45,8 +45,8 @@ export default function LandingPage() {
         
         {/* Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ width: '32px', height: '32px', background: '#4285F4', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold' }}>J</div>
-          <span style={{ fontSize: '1.25rem', fontWeight: 'bold', color: theme.textMain }}>JobLink</span>
+          <div class="hover" style={{ width: '32px', height: '32px', background: '#4285F4', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold' }}>J</div>
+          <span class="hover" style={{ fontSize: '1.25rem', fontWeight: 'bold', color: theme.textMain }}>JobLink</span>
         </div>
 
         {/* Right Side Tools */}
@@ -70,7 +70,7 @@ export default function LandingPage() {
             {isDarkMode ? '🌙' : '☀️'}
           </button>
 
-          <button style={{ 
+          <button class="hover" style={{ 
             display: 'flex', 
             alignItems: 'center', 
             gap: '5px', 
@@ -86,7 +86,7 @@ export default function LandingPage() {
             <span>EN / HI</span>
           </button>
 
-          <Link href="/login">
+          <Link class="hover" href="/login">
             <button style={{ 
               background: isDarkMode ? '#f4f4f4' : '#333', 
               color: isDarkMode ? '#333' : 'white', 
@@ -130,7 +130,7 @@ export default function LandingPage() {
             <h2 style={{ marginBottom: '10px', color: theme.textMain }}>I Need Work</h2>
             <p style={{ color: theme.textSub, marginBottom: '20px' }}>Find daily shifts, part-time tasks, or full-time jobs.</p>
             <Link href="/seeker/dashboard">
-              <button style={{ width: '100%', padding: '15px', background: '#4285F4', color: 'white', border: 'none', borderRadius: '10px', fontSize: '1.1rem', fontWeight: 'bold', cursor: 'pointer' }}>
+              <button class="hover" style={{ width: '100%', padding: '15px', background: '#4285F4', color: 'white', border: 'none', borderRadius: '10px', fontSize: '1.1rem', fontWeight: 'bold', cursor: 'pointer' }}>
                 Find Jobs
               </button>
             </Link>
@@ -152,7 +152,7 @@ export default function LandingPage() {
             <h2 style={{ marginBottom: '10px', color: theme.textMain }}>I Need Workers</h2>
             <p style={{ color: theme.textSub, marginBottom: '20px' }}>Hire help for your shop, home, or office instantly.</p>
             <Link href="/provider/dashboard">
-              <button style={{ width: '100%', padding: '15px', background: '#34A853', color: 'white', border: 'none', borderRadius: '10px', fontSize: '1.1rem', fontWeight: 'bold', cursor: 'pointer' }}>
+              <button class="hover" style={{ width: '100%', padding: '15px', background: '#34A853', color: 'white', border: 'none', borderRadius: '10px', fontSize: '1.1rem', fontWeight: 'bold', cursor: 'pointer' }}>
                 Post a Job
               </button>
             </Link>
