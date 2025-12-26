@@ -26,19 +26,9 @@ export default function LandingPage() {
 
         {/* Right Side: Language & Login & darkmode */}
         <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-          <button className = "mode" style={{
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '5px', 
-            padding: '8px 12px', 
-            border: '1px solid #ccc', 
-            borderRadius: '20px', 
-            background: 'white', 
-            cursor: 'pointer',
-            fontSize: '0.9rem'
-         }}>
-            <span> 🔆 </span> 
-          </button>
+<button id="theme-toggle" class="mode-btn">
+  <span class="icon">☀️</span>
+</button>
           <script src="DOM.js"></script>
           {/* THE LANGUAGE TOGGLE */}
           <button class="hover" style={{ 
