@@ -97,7 +97,7 @@ export default function HomeTab() {
         
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
           {/* Google Translate Dropdown Container */}
-          <div id="google_translate_element" style={{ maxHeight: '36px', minWidth: '130px' }}></div>
+          <div id="google_translate_element" style={{ maxHeight: '36px', minWidth: '130px' }}> ENG/HIND</div>
 
           <button onClick={toggleTheme} style={{ background: 'transparent', border: `1px solid ${theme.border}`, width: '36px', height: '36px', borderRadius: '50%', cursor: 'pointer', color: theme.textMain, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
@@ -195,3 +195,4 @@ export default function HomeTab() {
     </div>
   );
 }
+
