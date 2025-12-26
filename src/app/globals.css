@@ -577,4 +577,28 @@ body {
 .dark:hover {
     transform: scale(1.1);
 }
+/* Default Light Mode */
+:root {
+  --bg-color: #f4f4f4;
+  --text-color: #333;
+  --card-bg: #ffffff;
+}
+
+/* Dark Mode Colors */
+[data-theme="dark"] {
+  --bg-color: #1a1a1a;
+  --text-color: #f4f4f4;
+  --card-bg: #2d2d2d;
+}
+
+/* Apply variables to your elements */
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  transition: 0.3s; /* Smooth fade between modes */
+}
+
+.job-card {
+  background-color: var(--card-bg);
+}
 
