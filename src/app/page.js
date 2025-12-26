@@ -26,7 +26,7 @@ export default function LandingPage() {
 
         {/* Right Side: Language & Login & darkmode */}
         <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-          <button class = "mode" style={{
+          <button className = "mode" style={{
             display: 'flex', 
             alignItems: 'center', 
             gap: '5px', 
