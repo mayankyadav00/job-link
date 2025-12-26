@@ -564,7 +564,7 @@ body {
 }
 
 .light:hover {
-    transform: scale(1);
+    transform: scale(1.1);
 }
 
 .dark {
@@ -575,6 +575,6 @@ body {
 
 
 .dark:hover {
-    transform: scale(1);
+    transform: scale(1.1);
 }
 
