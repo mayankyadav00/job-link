@@ -91,20 +91,23 @@ export default function HomeTab() {
         
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
           {/* THEME TOGGLE BUTTON */}
-          <button 
-            onClick={() => setIsDarkMode(!isDarkMode)}
+          <button class="hover"
+            onClick={toggleTheme}
             style={{
-              background: theme.filterBtn,
+              background: isDarkMode ? '#444' : '#eee',
               border: 'none',
-              padding: '8px',
-              borderRadius: '50%',
+              padding: '8px 12px',
+              borderRadius: '20px',
               cursor: 'pointer',
-              color: theme.textMain,
-              display: 'flex'
+              fontSize: '1.2rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
             }}
           >
-            {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
+            {isDarkMode ? '🌙' : '☀️'}
           </button>
+
 
           {/* FILTER TRIGGER BUTTON */}
           <button 
@@ -238,6 +241,7 @@ export default function HomeTab() {
     </div>
   );
 }
+
 
 
 
