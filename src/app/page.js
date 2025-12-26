@@ -53,7 +53,7 @@ export default function LandingPage() {
         <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
           
           {/* THE WORKING TOGGLE BUTTON */}
-          <button 
+          <button class="hover"
             onClick={toggleTheme}
             style={{
               background: isDarkMode ? '#444' : '#eee',
