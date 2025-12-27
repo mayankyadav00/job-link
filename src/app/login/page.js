@@ -2,7 +2,6 @@
 import { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
-// ✅ Import the safer way
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
@@ -177,4 +176,42 @@ function AuthContent() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              style={{ width: '100%', padding: '1
+              style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd' }}
+            />
+          </div>
+
+          <button 
+            type="submit" 
+            disabled={loading}
+            style={{ width: '100%', padding: '12px', border: 'none', borderRadius: '8px', background: '#333', color: 'white', fontWeight: 'bold', cursor: 'pointer', opacity: loading ? 0.7 : 1 }}
+          >
+            {loading ? 'Processing...' : (isSignUp ? 'Create Account' : 'Login')}
+          </button>
+        </form>
+
+        {/* Toggle Logic */}
+        <p style={{ marginTop: '20px', fontSize: '0.9rem', color: '#666' }}>
+          {isSignUp ? "Already have an account?" : "New to JobLink?"} 
+          <span 
+            onClick={() => setIsSignUp(!isSignUp)} 
+            style={{ color: '#0070f3', fontWeight: 'bold', cursor: 'pointer', marginLeft: '5px' }}
+          >
+            {isSignUp ? "Login here" : "Sign up here"}
+          </span>
+        </p>
+
+        <Link href="/" style={{ display: 'block', marginTop: '20px', color: '#888', textDecoration: 'none', fontSize: '0.8rem' }}>
+          ← Back to Landing Page
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AuthContent />
+    </Suspense>
+  );
+}
