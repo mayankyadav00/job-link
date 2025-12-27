@@ -1,17 +1,16 @@
 import './globals.css';
-import { ThemeProvider } from '../context/ThemeContext';
-import Navbar from '@/components/Navbar'; // We will create this next
 
 export const metadata = {
-  title: 'JobLink - Find Work in Patna',
-  description: 'Connecting seekers and providers.',
+  title: 'JobLink',
+  description: 'Find Work. Hire Local.',
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
-        {/* Google Translate Script */}
+        {/* Keeping your Google Translate Script if you want it globally, 
+            otherwise remove these script tags too */}
         <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
         <script dangerouslySetInnerHTML={{
           __html: `
@@ -22,12 +21,8 @@ export default function RootLayout({ children }) {
         }} />
       </head>
       <body>
-        <ThemeProvider>
-          <div id="app-wrapper">
-             <Navbar /> 
-             {children}
-          </div>
-        </ThemeProvider>
+        {/* Just render the page content, no forced Navbar */}
+        {children}
       </body>
     </html>
   );
