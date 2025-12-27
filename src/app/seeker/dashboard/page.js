@@ -6,6 +6,8 @@ import { X, Filter } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 import JobMap from '../../../components/JobMap';
 import { Map, List } from 'lucide-react'; // Import icons
+const [viewMode, setViewMode] = useState('list'); // 'list' or 'map'
+
 // --- 1. SETUP DATABASE CONNECTION ---
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -100,6 +102,17 @@ export default function HomeTab() {
 
     return true;
   });
+  {viewMode === 'list' ? (
+  /* --- EXISTING LIST CODE --- */
+  <div style={{ padding: '20px' }}>
+     {/* ... existing list mapping code ... */}
+  </div>
+) : (
+  /* --- NEW MAP VIEW --- */
+  <div style={{ padding: '20px', height: 'calc(100vh - 150px)' }}>
+    <JobMap jobs={filteredJobs} />
+  </div>
+)}
 
   // CATEGORY LISTS
   const filterOptions = {
@@ -214,6 +227,21 @@ export default function HomeTab() {
             </button>
 
           </div>
+                {/* VIEW TOGGLE */}
+<div style={{ display: 'flex', background: '#f1f3f4', borderRadius: '20px', padding: '4px', marginLeft: '10px' }}>
+  <button 
+    onClick={() => setViewMode('list')}
+    style={{ padding: '6px 12px', border: 'none', background: viewMode === 'list' ? 'white' : 'transparent', borderRadius: '16px', cursor: 'pointer', boxShadow: viewMode === 'list' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none', display: 'flex', alignItems: 'center', gap: '5px' }}
+  >
+    <List size={16} /> List
+  </button>
+  <button 
+    onClick={() => setViewMode('map')}
+    style={{ padding: '6px 12px', border: 'none', background: viewMode === 'map' ? 'white' : 'transparent', borderRadius: '16px', cursor: 'pointer', boxShadow: viewMode === 'map' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none', display: 'flex', alignItems: 'center', gap: '5px' }}
+  >
+    <Map size={16} /> Map
+  </button>
+</div>
         </div>
       )}
 
@@ -228,4 +256,5 @@ export default function HomeTab() {
     </div>
   );
 }
+
 
