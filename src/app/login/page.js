@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
-import { supabase } from '../../lib/supabase'; // Ensure this path matches your folder structure
+import { supabase } from '@/lib/supabase'; // Ensure this path matches your folder structure
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
@@ -75,3 +75,4 @@ export default function LoginPage() {
     </div>
   );
 }
+
