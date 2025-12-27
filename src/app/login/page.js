@@ -11,7 +11,7 @@ export default function LoginPage() {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window}/seeker/dashboard`, // Where to go after login
+          redirectTo: `${window.location.origin}/seeker/dashboard`, // Where to go after login
         },
       });
 
@@ -46,5 +46,6 @@ export default function LoginPage() {
     </div>
   );
 }
+
 
 
