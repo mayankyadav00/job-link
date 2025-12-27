@@ -1,6 +1,6 @@
 import './globals.css';
 import { ThemeProvider } from '../context/ThemeContext';
-import Navbar from '../components/Navbar'; // We will create this next
+import Navbar from '@/components/Navbar'; // We will create this next
 
 export const metadata = {
   title: 'JobLink - Find Work in Patna',
