@@ -1,48 +1,47 @@
 // src/app/login/page.js
+'use client';
 import Link from 'next/link';
+import { supabase } from '../../lib/supabase'; // Import Supabase
 
 export default function LoginPage() {
+
+  const handleGoogleLogin = async () => {
+    try {
+      // Supabase handles the Google Popup for us
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/seeker/dashboard`, // Where to go after login
+        },
+      });
+
+      if (error) throw error;
+      
+    } catch (error) {
+      alert("Login failed: " + error.message);
+    }
+  };
+
   return (
     <div className="login-container">
-      
       <div className="login-box">
         <h2 style={{ marginBottom: '20px' }}>Welcome Back</h2>
         
-        {/* Simple HTML Form */}
-        <form>
-          <input 
-            type="email" 
-            placeholder="Enter your email" 
-            className="input-field" 
-            required 
-          />
-          
-          <input 
-            type="password" 
-            placeholder="Enter password" 
-            className="input-field" 
-            required 
-          />
-          
-          <button type="submit" className="login-btn">
-            Login
-          </button>
+        <form onSubmit={(e) => e.preventDefault()}>
+          <input type="email" placeholder="Enter your email" className="input-field" />
+          <input type="password" placeholder="Enter password" className="input-field" />
+          <button className="login-btn">Login</button>
         </form>
 
         <div style={{ margin: '15px 0', color: '#888' }}>OR</div>
 
-        {/* The Google Sign-In Button (Hackathon Requirement) */}
-        <button className="google-btn">
-          {/* This is a simple Google 'G' icon made with text/css for now */}
+        {/* GOOGLE BUTTON */}
+        <button className="google-btn" onClick={handleGoogleLogin}>
           <span style={{ fontWeight: 'bold', color: '#4285F4' }}>G</span> 
           Sign in with Google
         </button>
 
-        {/* Link back to home */}
-        <Link href="/" className="back-link">
-          ← Back to Home
-        </Link>
-
+        <Link href="/" className="back-link">← Back to Home</Link>
       </div>
     </div>
   );
