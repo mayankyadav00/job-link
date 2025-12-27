@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { X, Filter } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
-
+import JobMap from '../../../components/JobMap';
+import { Map, List } from 'lucide-react'; // Import icons
 // --- 1. SETUP DATABASE CONNECTION ---
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -227,3 +228,4 @@ export default function HomeTab() {
     </div>
   );
 }
+
