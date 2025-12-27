@@ -1,7 +1,7 @@
 // src/app/seeker/job/[id]/page.js
 'use client'; // This is required because we use 'useParams'
 
-import { Navbar } from '@/components/Navbar';
+import Navbar from '@/components/Navbar';
 import { useParams } from 'next/navigation'; // Hook to read the [id] from URL
 import Link from 'next/link';
 
@@ -123,4 +123,5 @@ export default function JobDetailsPage() {
   );
 
 }
+
 
