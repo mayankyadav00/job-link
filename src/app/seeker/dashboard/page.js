@@ -3,22 +3,18 @@
 import { BottomNav } from '../../../components/BottomNav';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { X, Filter, Sun, Moon } from 'lucide-react';
+import { X, Filter, Sun, Moon } from 'lucide-react'; 
 
 export default function HomeTab() {
   // --- THEME STATE ---
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (localStorage.getItem('theme') === 'dark') setIsDarkMode(true);
 
-    // Sync theme
-    if (localStorage.getItem('theme') === 'dark') {
-      setIsDarkMode(true);
-    }
+    const addGoogleTranslateScript = () => {
+      if (document.getElementById('google-translate-script')) return;
 
-    // GOOGLE TRANSLATE SCRIPT
-    if (!document.getElementById('google-translate-script')) {
       const script = document.createElement('script');
       script.id = 'google-translate-script';
       script.src =
@@ -26,28 +22,25 @@ export default function HomeTab() {
       script.async = true;
       document.body.appendChild(script);
 
-      window.googleTranslateElementInit = function () {
-        if (!window.google || !window.google.translate) return;
-
+      window.googleTranslateElementInit = () => {
         new window.google.translate.TranslateElement(
           {
             pageLanguage: 'en',
             includedLanguages: 'en,hi',
-            layout:
-              window.google.translate.TranslateElement.InlineLayout.SIMPLE,
+            layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE,
           },
           'google_translate_element'
         );
       };
-    }
+    };
+
+    addGoogleTranslateScript();
   }, []);
 
   const toggleTheme = () => {
     const next = !isDarkMode;
     setIsDarkMode(next);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('theme', next ? 'dark' : 'light');
-    }
+    localStorage.setItem('theme', next ? 'dark' : 'light');
   };
 
   const theme = {
@@ -69,58 +62,30 @@ export default function HomeTab() {
   });
 
   const jobs = [
-    {
-      id: 1,
-      title: 'Urgent Plumber Needed',
-      pay: '₹500/visit',
-      workMode: 'Area around NIT Patna',
-      department: 'Plumber',
-      duration: 'Short time (hours)',
-    },
-    {
-      id: 2,
-      title: 'Home Electrician',
-      pay: '₹800/day',
-      workMode: 'Patna Junction',
-      department: 'Electrician',
-      duration: 'One day',
-    },
-    {
-      id: 3,
-      title: 'Full Time Cleaner',
-      pay: '₹12k/mo',
-      workMode: 'Work from home',
-      department: 'Cleaner',
-      duration: 'Long term',
-    },
-    {
-      id: 4,
-      title: 'Remote Support Staff',
-      pay: '₹15k/mo',
-      workMode: 'Remote Area',
-      department: 'Electrician',
-      duration: 'Long term',
-    },
-    {
-      id: 5,
-      title: 'Pipe Fitting Helper',
-      pay: '₹300/hour',
-      workMode: 'Area around NIT Patna',
-      department: 'Plumber',
-      duration: 'Short time (hours)',
-    },
+    { id: 1, title: "Urgent Plumber Needed", pay: "₹500/visit", workMode: "Area around NIT Patna", department: "Plumber", duration: "Short time (hours)" },
+    { id: 2, title: "Home Electrician", pay: "₹800/day", workMode: "Patna Junction", department: "Electrician", duration: "One day" },
+    { id: 3, title: "Full Time Cleaner", pay: "₹12k/mo", workMode: "Work from home", department: "Cleaner", duration: "Long term" },
+    { id: 4, title: "Remote Support Staff", pay: "₹15k/mo", workMode: "Remote Area", department: "Electrician", duration: "Long term" },
+    { id: 5, title: "Pipe Fitting Helper", pay: "₹300/hour", workMode: "Area around NIT Patna", department: "Plumber", duration: "Short time (hours)" },
   ];
 
-  const filteredJobs = jobs.filter((job) => {
-    return (
-      (selectedFilters.workMode.length === 0 ||
-        selectedFilters.workMode.includes(job.workMode)) &&
-      (selectedFilters.department.length === 0 ||
-        selectedFilters.department.includes(job.department)) &&
-      (selectedFilters.duration.length === 0 ||
-        selectedFilters.duration.includes(job.duration))
-    );
-  });
+  const handleCheckboxChange = (category, value) => {
+    setSelectedFilters((prev) => {
+      const alreadySelected = prev[category].includes(value);
+      return {
+        ...prev,
+        [category]: alreadySelected
+          ? prev[category].filter((v) => v !== value)
+          : [...prev[category], value],
+      };
+    });
+  };
+
+  const filterOptions = {
+    workMode: ["Work from home", "Remote Area", "Area around NIT Patna", "Patna Junction"],
+    department: ["Plumber", "Electrician", "Cleaner"],
+    duration: ["Short time (hours)", "One day", "Long term"],
+  };
 
   return (
     <div
@@ -140,9 +105,6 @@ export default function HomeTab() {
           justifyContent: 'space-between',
           alignItems: 'center',
           background: theme.navBg,
-          boxShadow: isDarkMode
-            ? '0 2px 10px rgba(0,0,0,0.3)'
-            : '0 2px 5px rgba(0,0,0,0.05)',
           position: 'sticky',
           top: 0,
           zIndex: 100,
@@ -169,48 +131,27 @@ export default function HomeTab() {
           </span>
         </div>
 
-        <div
-          id="google_translate_element"
-          style={{ maxHeight: '36px', overflow: 'hidden' }}
-        />
+        <div id="google_translate_element" />
 
-        <button
-          onClick={toggleTheme}
-          style={{
-            background: 'transparent',
-            border: `1px solid ${theme.border}`,
-            width: '36px',
-            height: '36px',
-            borderRadius: '50%',
-            cursor: 'pointer',
-            color: theme.textMain,
-          }}
-        >
+        <button onClick={toggleTheme}>
           {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
+        </button>
+
+        <button onClick={() => setIsFilterOpen(true)}>
+          <Filter size={16} /> Filter
         </button>
       </div>
 
-      {/* MAIN CONTENT */}
+      {/* MAIN */}
       <div style={{ padding: '20px' }}>
-        <p style={{ color: theme.textSub, fontSize: '0.9rem' }}>
+        <p>
           Found {filteredJobs.length} jobs based on your preferences.
         </p>
 
         {filteredJobs.map((job) => (
-          <div
-            key={job.id}
-            style={{
-              border: `1px solid ${theme.border}`,
-              borderRadius: '16px',
-              padding: '20px',
-              marginBottom: '15px',
-              background: theme.cardBg,
-            }}
-          >
-            <h3 style={{ margin: '0 0 8px 0' }}>{job.title}</h3>
-            <p style={{ color: theme.textSub }}>
-              {job.department} • {job.workMode}
-            </p>
+          <div key={job.id}>
+            <h3>{job.title}</h3>
+            <p>{job.department} • {job.workMode}</p>
           </div>
         ))}
       </div>
