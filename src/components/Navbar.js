@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { useTheme } from '../context/ThemeContext';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function Navbar() {
   const { theme, toggleTheme } = useTheme();
@@ -44,3 +44,4 @@ export default function Navbar() {
     </nav>
   );
 }
+
