@@ -14,7 +14,7 @@ export default function LoginPage() {
       const currentURL = window.location.origin;
 
       // 2. Trigger the Google Login
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           // Redirects to /seeker/dashboard after login
@@ -75,4 +75,5 @@ export default function LoginPage() {
     </div>
   );
 }
+
 
