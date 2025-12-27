@@ -1,127 +1,147 @@
-// src/app/seeker/job/[id]/page.js
-'use client'; // This is required because we use 'useParams'
-
-import Navbar from '@/components/Navbar';
-import { useParams } from 'next/navigation'; // Hook to read the [id] from URL
+'use client';
+import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@supabase/supabase-js';
+import { ArrowLeft, MapPin, Clock, DollarSign, Briefcase, CheckCircle } from 'lucide-react';
 
-// 1. Same Mock Data as before (In a real app, we fetch this from Database)
-const allJobs = [
-  {
-    id: 2,
-    title: "React JS Developer",
-    location: "Remote",
-    pay: "₹25,000 / month",
-    description: "We are looking for a beginner React developer to help build a dashboard. Must know JavaScript and CSS.",
-    requirements: ["React.js", "HTML/CSS", "Git"],
-    isUrgent: false
-  },
-  {
-    id: 1,
-    title: "Dishwasher Needed",
-    location: "Sharma Dhaba, Patna (2km away)",
-    pay: "₹400 / day",
-    description: "Urgent requirement for a dishwasher for 3 days. Morning shift only. Cash payment daily.",
-    requirements: ["Hardworking", "Punctual"],
-    isUrgent: true
-  },
-  {
-    id: 3,
-    title: "Data Entry Operator",
-    location: "Civil Lines, Office No. 4",
-    pay: "₹8,000 / project",
-    description: "Digitize 500 pages of handwritten notes into Excel. Accuracy is key.",
-    requirements: ["Typing Speed 40wpm", "Excel"],
-    isUrgent: false
-  },
-  {
-    id: 4,
-    title: "Plumber for Urgent Repair",
-    location: "Kankarbagh Colony",
-    pay: "Negotiable",
-    description: "Leakage in main water tank. Need immediate repair.",
-    requirements: ["Plumbing Tools", "Experience"],
-    isUrgent: true
-  },
-  {
-    id: 5,
-    title: "Shop Staff",
-    location: "Ashok Rajpath",
-    pay: "Negotiable",
-    description: "Need a skilled staff for grocery store for two days.",
-    requirements: ["Communication", "Packing skill", "Avioding skill for  negotation"],
-    isUrgent: true
-  }
-];
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
 
-export default function JobDetailsPage() {
-  const params = useParams(); // Get the ID from the URL
-  const jobId = parseInt(params.id); // Convert "1" (string) to 1 (number)
+export default function JobDetailsPage({ params }) {
+  // Unwrap params (Next.js 15+ requirement)
+  const { id } = use(params);
+  
+  const router = useRouter();
+  const [job, setJob] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [applying, setApplying] = useState(false);
+  const [hasApplied, setHasApplied] = useState(false);
+  const [user, setUser] = useState(null);
 
-  // Find the specific job from our list
-  const job = allJobs.find(j => j.id === jobId);
+  useEffect(() => {
+    const fetchData = async () => {
+      // 1. Get User
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
 
-  // If job not found (e.g. user types random ID)
-  if (!job) {
-    return <div style={{ padding: 50, textAlign: 'center' }}>Job not found!</div>;
-  }
+      // 2. Fetch Job Details
+      const { data: jobData, error } = await supabase
+        .from('jobs')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (error) {
+        alert("Job not found!");
+        router.push('/seeker/dashboard');
+        return;
+      }
+      setJob(jobData);
+
+      // 3. Check if already applied
+      if (user) {
+        const { data: appData } = await supabase
+          .from('applications')
+          .select('*')
+          .eq('job_id', id)
+          .eq('seeker_id', user.id)
+          .single();
+        
+        if (appData) setHasApplied(true);
+      }
+
+      setLoading(false);
+    };
+
+    fetchData();
+  }, [id, router]);
+
+  const handleApply = async () => {
+    if (!user) return router.push('/login');
+    setApplying(true);
+
+    try {
+      const { error } = await supabase.from('applications').insert({
+        job_id: id,
+        seeker_id: user.id
+      });
+
+      if (error) throw error;
+      
+      setHasApplied(true);
+      alert("Application Sent! The provider will contact you.");
+    } catch (err) {
+      alert("Error: " + err.message);
+    } finally {
+      setApplying(false);
+    }
+  };
+
+  if (loading) return <div style={{ padding: '40px', textAlign: 'center' }}>Loading job details...</div>;
+  if (!job) return null;
 
   return (
-    <div style={{ backgroundColor: '#f9fafb', minHeight: '100vh' }}>
-      <Navbar />
+    <div style={{ background: '#f8fafc', minHeight: '100vh', paddingBottom: '80px' }}>
+      
+      {/* HEADER */}
+      <div style={{ background: 'white', padding: '20px', display: 'flex', alignItems: 'center', gap: '15px', borderBottom: '1px solid #eee' }}>
+        <Link href="/seeker/dashboard">
+          <ArrowLeft size={24} color="#333" />
+        </Link>
+        <h1 style={{ fontSize: '1.2rem', fontWeight: 'bold', margin: 0 }}>Job Details</h1>
+      </div>
 
-      <main className="job-details-container">
+      <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
         
-        {/* Header */}
-        <div className="details-header">
-           {/* Back Button */}
-           <Link href="/seeker/dashboard" style={{ textDecoration: 'none', color: '#666', marginBottom: '10px', display: 'block' }}>
-            ← Back to Jobs
-          </Link>
+        {/* MAIN CARD */}
+        <div style={{ background: 'white', borderRadius: '16px', padding: '25px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', marginBottom: '20px' }}>
+          <span style={{ background: '#e0f2fe', color: '#0284c7', padding: '6px 12px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold', display: 'inline-block', marginBottom: '15px' }}>
+            {job.job_type}
+          </span>
           
-          <h1 className="big-title">{job.title}</h1>
-          <p style={{ color: '#666', marginTop: '5px' }}>📍 {job.location}</p>
-          <span className="pay-badge">{job.pay}</span>
-        </div>
-
-        {/* Description */}
-        <div>
-          <h3 className="section-title">Job Description</h3>
-          <p className="description-text">{job.description}</p>
-        </div>
-
-        {/* Requirements */}
-        <div>
-          <h3 className="section-title">Requirements</h3>
-          <ul style={{ paddingLeft: '20px', color: '#555' }}>
-            {job.requirements.map((req, index) => (
-              <li key={index} style={{ marginBottom: '5px' }}>{req}</li>
-            ))}
-          </ul>
-        </div>
-
-        {/* Google Map Placeholder (We will hook the API here later) */}
-        <div>
-           <h3 className="section-title">Location Map</h3>
-           <div className="map-placeholder">
-              Google Map will load here...
-           </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="action-area">
-          <button className="btn-save">Save for Later</button>
+          <h2 style={{ fontSize: '1.8rem', fontWeight: '800', color: '#1e293b', marginBottom: '10px' }}>{job.title}</h2>
           
-          {/* This is where we will hook up Gemini Resume Matching later */}
-          <button className="btn-apply" onClick={() => alert('Application Sent! (This will be connected to database later)')}>
-            Apply Now
-          </button>
+          <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', color: '#64748b', marginBottom: '25px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><MapPin size={18} /> {job.location_name}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Clock size={18} /> {new Date(job.created_at).toLocaleDateString()}</div>
+          </div>
+
+          <div style={{ borderTop: '1px solid #f1f5f9', borderBottom: '1px solid #f1f5f9', padding: '20px 0', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.5rem', fontWeight: 'bold', color: '#16a34a' }}>
+              <DollarSign size={28} />
+              {job.pay_rate}
+            </div>
+          </div>
+
+          <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '10px' }}>Description</h3>
+          <p style={{ lineHeight: '1.6', color: '#475569', fontSize: '1rem' }}>
+            {job.description}
+          </p>
         </div>
 
-      </main>
+        {/* APPLY BUTTON (Fixed at bottom on mobile, or inline on desktop) */}
+        <div style={{ position: 'fixed', bottom: 0, left: 0, width: '100%', background: 'white', padding: '20px', borderTop: '1px solid #eee', display: 'flex', justifyContent: 'center' }}>
+          {hasApplied ? (
+            <button disabled style={{ width: '100%', maxWidth: '500px', padding: '16px', background: '#dcfce7', color: '#166534', border: 'none', borderRadius: '12px', fontWeight: 'bold', fontSize: '1.1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+              <CheckCircle size={24} />
+              Application Sent
+            </button>
+          ) : (
+            <button 
+              onClick={handleApply}
+              disabled={applying}
+              style={{ width: '100%', maxWidth: '500px', padding: '16px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 'bold', fontSize: '1.1rem', cursor: 'pointer', boxShadow: '0 4px 12px rgba(37, 99, 235, 0.3)' }}
+            >
+              {applying ? 'Sending...' : 'Apply Now'}
+            </button>
+          )}
+        </div>
+
+      </div>
+      <div style={{ height: '80px' }}></div> {/* Spacer for fixed button */}
     </div>
   );
-
 }
-
-
