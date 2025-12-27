@@ -144,7 +144,7 @@ export default function LandingPage() {
             <p style={{ color: theme.textSub, marginBottom: '20px' }}>
                 {isHindi ? 'दैनिक शिफ्ट, पार्ट-टाइम काम या फुल-टाइम नौकरियां खोजें।' : 'Find daily shifts, part-time tasks, or full-time jobs.'}
             </p>
-            <Link href="/seeker/dashboard">
+            <Link href="/login?type=seeker">
               <button className="hover" style={{ width: '100%', padding: '15px', background: '#4285F4', color: 'white', border: 'none', borderRadius: '10px', fontSize: '1.1rem', fontWeight: 'bold', cursor: 'pointer' }}>
                 {isHindi ? 'नौकरियां खोजें' : 'Find Jobs'}
               </button>
@@ -170,7 +170,7 @@ export default function LandingPage() {
             <p style={{ color: theme.textSub, marginBottom: '20px' }}>
                 {isHindi ? 'अपने दुकान, घर या ऑफिस के लिए तुरंत मदद लें।' : 'Hire help for your shop, home, or office instantly.'}
             </p>
-            <Link href="/provider/dashboard">
+            <Link href="/login?type=provider">
               <button className="hover" style={{ width: '100%', padding: '15px', background: '#34A853', color: 'white', border: 'none', borderRadius: '10px', fontSize: '1.1rem', fontWeight: 'bold', cursor: 'pointer' }}>
                 {isHindi ? 'काम पोस्ट करें' : 'Post a Job'}
               </button>
