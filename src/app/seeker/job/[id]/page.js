@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, MapPin, Clock, DollarSign, Briefcase, CheckCircle } from 'lucide-react';
-import { BottomNav } from '../../components/BottomNav';
+import { BottomNav } from '../components/BottomNav';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -171,5 +171,6 @@ export default function JobDetailsPage() {
 const detailBoxStyle = { display: 'flex', alignItems: 'center', gap: '12px', padding: '15px', background: '#f8fafc', borderRadius: '12px' };
 const labelStyle = { display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '4px' };
 const valueStyle = { fontWeight: 'bold', color: '#334155' };
+
 
 
