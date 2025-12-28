@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { X, Filter, Map, List } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 import JobMap from '../../../components/JobMap';
-
+import AIChatBot from '../../../components/AIChatBot';
 // --- 1. SETUP DATABASE CONNECTION ---
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -242,6 +242,8 @@ export default function HomeTab() {
           to { transform: translateX(0); }
         }
       `}</style>
+      <AIChatBot />
     </div>
   );
 }
+
