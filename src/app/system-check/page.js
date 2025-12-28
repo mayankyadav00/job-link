@@ -85,7 +85,7 @@ export default function SystemCheck() {
       <p style={{ marginTop: '20px', color: '#666' }}>
         If Environment Variables are missing:<br/>
         1. Localhost: Check <code>.env.local</code> file.<br/>
-        2. Vercel: Check Settings -> Environment Variables.
+        //2. Vercel: Check Settings -> Environment Variables.
           
       </p>
     </div>
