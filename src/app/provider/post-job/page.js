@@ -12,6 +12,7 @@ const supabase = createClient(
 export default function PostJobPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [statusMsg, setStatusMsg] = useState(''); // For debugging feedback
   
   const [form, setForm] = useState({
     title: '',
@@ -21,64 +22,101 @@ export default function PostJobPage() {
     location: 'Patna' 
   });
 
-  // --- GEOCODING HELPER ---
+  // --- SAFE GEOCODING (With Timeout) ---
   const getCoordinates = async (address) => {
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY;
-    if (!apiKey) return null; // Safety check
+    if (!apiKey) {
+      console.warn("No Google Maps API Key found. Skipping geocoding.");
+      return null;
+    }
 
     try {
-      // Call Google Geocoding API
+      console.log("Fetching coordinates for:", address);
+      
+      // Create a timeout so the app doesn't freeze if Google is slow
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+
       const response = await fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`
+        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`,
+        { signal: controller.signal }
       );
+      clearTimeout(timeoutId);
+
       const data = await response.json();
+      console.log("Google API Response:", data);
 
       if (data.status === 'OK' && data.results[0]) {
         const { lat, lng } = data.results[0].geometry.location;
         return { lat, lng };
+      } else {
+        console.error("Geocoding Status:", data.status);
       }
     } catch (error) {
-      console.error("Geocoding failed:", error);
+      console.error("Geocoding Failed (Network/Timeout):", error);
     }
-    return null; // Return null if failed
+    return null;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setStatusMsg('Checking User...');
     
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return router.push('/login');
+    try {
+      // 1. Check User
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) {
+        alert("You are not logged in!");
+        router.push('/login');
+        return;
+      }
 
-    // 1. Get Coordinates from Google
-    let lat = null;
-    let lng = null;
-    const coords = await getCoordinates(form.location);
-    if (coords) {
-      lat = coords.lat;
-      lng = coords.lng;
-    }
+      // 2. Get Coords (Don't let this block the whole process)
+      setStatusMsg('Getting Location...');
+      let lat = null;
+      let lng = null;
+      const coords = await getCoordinates(form.location);
+      if (coords) {
+        lat = coords.lat;
+        lng = coords.lng;
+      }
 
-    // 2. Save to Database
-    const { error } = await supabase.from('jobs').insert({
-      provider_id: user.id,
-      title: form.title,
-      description: form.description,
-      pay_rate: `₹${form.pay_rate}`, 
-      job_type: form.job_type,
-      location_name: form.location, // Text address
-      latitude: lat,                 // Coordinate
-      longitude: lng,                // Coordinate
-      status: 'open'
-    });
+      // 3. Save to DB
+      setStatusMsg('Saving to Database...');
+      console.log("Attempting INSERT with:", {
+        provider_id: user.id,
+        title: form.title,
+        ...form
+      });
 
-    if (error) {
-      alert(error.message);
-    } else {
+      const { data, error: dbError } = await supabase.from('jobs').insert({
+        provider_id: user.id,
+        title: form.title,
+        description: form.description,
+        pay_rate: `₹${form.pay_rate}`, 
+        job_type: form.job_type,
+        location_name: form.location,
+        latitude: lat,
+        longitude: lng,
+        status: 'open'
+      }).select(); // .select() returns the inserted data so we can check it
+
+      if (dbError) {
+        console.error("Database Insert Error:", dbError);
+        throw dbError;
+      }
+
+      console.log("Success! Data:", data);
       alert("Job Posted Successfully!");
       router.push('/provider/dashboard');
+
+    } catch (error) {
+      alert("Failed: " + error.message);
+      setStatusMsg('Error: ' + error.message);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -155,15 +193,17 @@ export default function PostJobPage() {
           </div>
         </div>
 
+        {statusMsg && <p style={{color: '#666', fontSize: '0.9rem', textAlign: 'center'}}>{statusMsg}</p>}
+
         <button 
           type="submit" 
           disabled={loading}
           style={{ 
             marginTop: '10px', padding: '15px', background: '#333', color: 'white', 
-            border: 'none', borderRadius: '10px', fontSize: '1.1rem', fontWeight: 'bold', cursor: 'pointer' 
+            border: 'none', borderRadius: '10px', fontSize: '1.1rem', fontWeight: 'bold', cursor: 'pointer', opacity: loading ? 0.7 : 1
           }}
         >
-          {loading ? 'Posting...' : 'Post Job Now'}
+          {loading ? 'Processing...' : 'Post Job Now'}
         </button>
 
       </form>
