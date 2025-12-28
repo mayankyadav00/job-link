@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 import { ProviderBottomNav } from '../../../components/ProviderBottomNav';
-import { GoogleGenerativeAI } from "@google/generative-ai"; // Install: npm install @google/generative-ai
+import { GoogleGenerativeAI } from "@google/generative-ai"; 
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -20,7 +20,7 @@ export default function PostJobPage() {
     description: '',
     pay_rate: '',
     job_type: 'Daily Wage',
-    location: 'Patna' // Default
+    location: 'Patna' 
   });
 
   // --- GEMINI AI MAGIC ---
@@ -33,7 +33,8 @@ export default function PostJobPage() {
     setAiLoading(true);
     try {
       const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+      // FIX: Changed model to 'gemini-1.5-flash' which is the current stable version
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
       const prompt = `Write a short, professional job description (max 40 words) for a "${form.title}" role in Patna. Keep it simple and inviting for daily workers.`;
       
@@ -43,7 +44,8 @@ export default function PostJobPage() {
       
       setForm(prev => ({ ...prev, description: text }));
     } catch (error) {
-      alert("AI Error: " + error.message);
+      console.error("AI Error:", error);
+      alert("AI Error: " + (error.message || "Failed to generate text"));
     } finally {
       setAiLoading(false);
     }
@@ -60,7 +62,7 @@ export default function PostJobPage() {
       provider_id: user.id,
       title: form.title,
       description: form.description,
-      pay_rate: `₹${form.pay_rate}`, // Adding Symbol Logic
+      pay_rate: `₹${form.pay_rate}`, 
       job_type: form.job_type,
       location_name: form.location,
       status: 'open'
@@ -105,7 +107,7 @@ export default function PostJobPage() {
               style={{ 
                 background: 'linear-gradient(45deg, #6200ea, #b388ff)', 
                 color: 'white', border: 'none', padding: '5px 12px', borderRadius: '15px', 
-                fontSize: '0.8rem', cursor: 'pointer', fontWeight: 'bold' 
+                fontSize: '0.8rem', cursor: 'pointer', fontWeight: 'bold', opacity: aiLoading ? 0.7 : 1
               }}
             >
               {aiLoading ? '✨ Thinking...' : '✨ Auto-Write'}
@@ -130,7 +132,7 @@ export default function PostJobPage() {
               placeholder="500" 
               value={form.pay_rate}
               onChange={e => setForm({...form, pay_rate: e.target.value})}
-              style={{ ...inputStyle, paddingLeft: '35px' }} // Space for symbol
+              style={{ ...inputStyle, paddingLeft: '35px' }} 
               required 
             />
           </div>
@@ -180,4 +182,3 @@ export default function PostJobPage() {
 
 const labelStyle = { display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#555' };
 const inputStyle = { width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #ddd', fontSize: '1rem', outline: 'none' };
-
