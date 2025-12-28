@@ -1,67 +1,182 @@
-// src/app/provider/post-job/page.js
 'use client';
-import { ProviderBottomNav } from '../../../components/ProviderBottomNav';
 import { useState } from 'react';
+import { createClient } from '@supabase/supabase-js';
+import { useRouter } from 'next/navigation';
+import { ProviderBottomNav } from '../../../components/ProviderBottomNav';
+import { GoogleGenerativeAI } from "@google/generative-ai"; // Install: npm install @google/generative-ai
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
 
 export default function PostJobPage() {
-  const [desc, setDesc] = useState('');
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  
+  const [form, setForm] = useState({
+    title: '',
+    description: '',
+    pay_rate: '',
+    job_type: 'Daily Wage',
+    location: 'Patna' // Default
+  });
 
-  const handleGemini = () => {
-    setDesc("Looking for a reliable worker for [Task Name]. Must be punctual and hard-working. Payment will be made daily. (Auto-generated)");
+  // --- GEMINI AI MAGIC ---
+  const handleAutoWrite = async () => {
+    if (!form.title) return alert("Please enter a Job Title first!");
+    
+    const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+    if (!apiKey) return alert("Missing API Key! Add NEXT_PUBLIC_GEMINI_API_KEY to .env.local");
+
+    setAiLoading(true);
+    try {
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+
+      const prompt = `Write a short, professional job description (max 40 words) for a "${form.title}" role in Patna. Keep it simple and inviting for daily workers.`;
+      
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
+      
+      setForm(prev => ({ ...prev, description: text }));
+    } catch (error) {
+      alert("AI Error: " + error.message);
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return router.push('/login');
+
+    const { error } = await supabase.from('jobs').insert({
+      provider_id: user.id,
+      title: form.title,
+      description: form.description,
+      pay_rate: `₹${form.pay_rate}`, // Adding Symbol Logic
+      job_type: form.job_type,
+      location_name: form.location,
+      status: 'open'
+    });
+
+    if (error) {
+      alert(error.message);
+    } else {
+      alert("Job Posted Successfully!");
+      router.push('/provider/dashboard');
+    }
+    setLoading(false);
   };
 
   return (
-    <div style={{ paddingBottom: '80px', backgroundColor: 'white', minHeight: '100vh' }}>
+    <div style={{ padding: '20px', paddingBottom: '80px', fontFamily: 'Arial, sans-serif' }}>
+      <h1 style={{ fontSize: '1.8rem', marginBottom: '20px', color: '#333' }}>Post a New Job</h1>
       
-      <div style={{ padding: '20px', borderBottom: '1px solid #eee' }}>
-        <h2 style={{ margin: 0 }}>Post a New Job</h2>
-      </div>
-
-      <div style={{ padding: '20px' }}>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
         
-        {/* Title */}
-        <div style={{ marginBottom: '20px' }}>
-          <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '8px' }}>Job Title</label>
-          <input type="text" placeholder="e.g. Driver Needed" style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ccc' }} />
+        {/* TITLE */}
+        <div>
+          <label style={labelStyle}>Job Title</label>
+          <input 
+            type="text" 
+            placeholder="e.g. Need Plumber Urgent" 
+            value={form.title}
+            onChange={e => setForm({...form, title: e.target.value})}
+            style={inputStyle}
+            required 
+          />
         </div>
 
-        {/* Location & Pay (Row) */}
-        <div style={{ display: 'flex', gap: '15px', marginBottom: '20px' }}>
-          <div style={{ flex: 1 }}>
-            <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '8px' }}>Location</label>
-            <input type="text" placeholder="Area Name" style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ccc' }} />
-          </div>
-          <div style={{ flex: 1 }}>
-            <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '8px' }}>Pay</label>
-            <input type="text" placeholder="₹ Amount" style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ccc' }} />
-          </div>
-        </div>
-
-        {/* Description with Gemini */}
-        <div style={{ marginBottom: '30px' }}>
+        {/* DESCRIPTION + AI BUTTON */}
+        <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <label style={{ fontWeight: 'bold' }}>Description</label>
-            <button onClick={handleGemini} style={{ background: 'linear-gradient(45deg, #4285F4, #9b59b6)', border: 'none', color: 'white', padding: '5px 10px', borderRadius: '15px', fontSize: '0.8rem', cursor: 'pointer' }}>
-              ✨ Auto-Write
+            <label style={labelStyle}>Description</label>
+            <button 
+              type="button" 
+              onClick={handleAutoWrite}
+              disabled={aiLoading}
+              style={{ 
+                background: 'linear-gradient(45deg, #6200ea, #b388ff)', 
+                color: 'white', border: 'none', padding: '5px 12px', borderRadius: '15px', 
+                fontSize: '0.8rem', cursor: 'pointer', fontWeight: 'bold' 
+              }}
+            >
+              {aiLoading ? '✨ Thinking...' : '✨ Auto-Write'}
             </button>
           </div>
           <textarea 
-            rows="6" 
-            value={desc}
-            onChange={(e) => setDesc(e.target.value)}
-            style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ccc', fontFamily: 'inherit' }}
-            placeholder="Explain the work..."
-          ></textarea>
+            placeholder="Describe the work..." 
+            value={form.description}
+            onChange={e => setForm({...form, description: e.target.value})}
+            style={{ ...inputStyle, minHeight: '100px' }}
+            required 
+          />
         </div>
 
-        {/* Submit Button */}
-        <button style={{ width: '100%', padding: '15px', background: '#34A853', color: 'white', border: 'none', borderRadius: '12px', fontSize: '1.1rem', fontWeight: 'bold' }}>
-          Post Job Now
+        {/* PAY RATE (WITH RUPEE SYMBOL) */}
+        <div>
+          <label style={labelStyle}>Pay Rate</label>
+          <div style={{ position: 'relative' }}>
+            <span style={{ position: 'absolute', left: '15px', top: '13px', color: '#666', fontSize: '1.1rem' }}>₹</span>
+            <input 
+              type="number" 
+              placeholder="500" 
+              value={form.pay_rate}
+              onChange={e => setForm({...form, pay_rate: e.target.value})}
+              style={{ ...inputStyle, paddingLeft: '35px' }} // Space for symbol
+              required 
+            />
+          </div>
+        </div>
+
+        {/* DETAILS ROW */}
+        <div style={{ display: 'flex', gap: '15px' }}>
+          <div style={{ flex: 1 }}>
+            <label style={labelStyle}>Type</label>
+            <select 
+              value={form.job_type}
+              onChange={e => setForm({...form, job_type: e.target.value})}
+              style={inputStyle}
+            >
+              <option>Daily Wage</option>
+              <option>Contract</option>
+              <option>Full-time</option>
+            </select>
+          </div>
+          <div style={{ flex: 1 }}>
+            <label style={labelStyle}>Location</label>
+            <input 
+              type="text" 
+              value={form.location}
+              onChange={e => setForm({...form, location: e.target.value})}
+              style={inputStyle}
+            />
+          </div>
+        </div>
+
+        <button 
+          type="submit" 
+          disabled={loading}
+          style={{ 
+            marginTop: '10px', padding: '15px', background: '#333', color: 'white', 
+            border: 'none', borderRadius: '10px', fontSize: '1.1rem', fontWeight: 'bold', cursor: 'pointer' 
+          }}
+        >
+          {loading ? 'Posting...' : 'Post Job Now'}
         </button>
 
-      </div>
-
+      </form>
       <ProviderBottomNav />
     </div>
   );
 }
+
+const labelStyle = { display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#555' };
+const inputStyle = { width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #ddd', fontSize: '1rem', outline: 'none' };
