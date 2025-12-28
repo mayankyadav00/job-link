@@ -21,6 +21,28 @@ export default function PostJobPage() {
     location: 'Patna' 
   });
 
+  // --- GEOCODING HELPER ---
+  const getCoordinates = async (address) => {
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY;
+    if (!apiKey) return null; // Safety check
+
+    try {
+      // Call Google Geocoding API
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`
+      );
+      const data = await response.json();
+
+      if (data.status === 'OK' && data.results[0]) {
+        const { lat, lng } = data.results[0].geometry.location;
+        return { lat, lng };
+      }
+    } catch (error) {
+      console.error("Geocoding failed:", error);
+    }
+    return null; // Return null if failed
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -28,13 +50,25 @@ export default function PostJobPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return router.push('/login');
 
+    // 1. Get Coordinates from Google
+    let lat = null;
+    let lng = null;
+    const coords = await getCoordinates(form.location);
+    if (coords) {
+      lat = coords.lat;
+      lng = coords.lng;
+    }
+
+    // 2. Save to Database
     const { error } = await supabase.from('jobs').insert({
       provider_id: user.id,
       title: form.title,
       description: form.description,
       pay_rate: `₹${form.pay_rate}`, 
       job_type: form.job_type,
-      location_name: form.location,
+      location_name: form.location, // Text address
+      latitude: lat,                 // Coordinate
+      longitude: lng,                // Coordinate
       status: 'open'
     });
 
@@ -66,11 +100,11 @@ export default function PostJobPage() {
           />
         </div>
 
-        {/* DESCRIPTION (Manual Input) */}
+        {/* DESCRIPTION */}
         <div>
           <label style={labelStyle}>Description</label>
           <textarea 
-            placeholder="Describe the work (e.g. Fix kitchen sink, bring tools)..." 
+            placeholder="Describe the work..." 
             value={form.description}
             onChange={e => setForm({...form, description: e.target.value})}
             style={{ ...inputStyle, minHeight: '100px' }}
@@ -78,7 +112,7 @@ export default function PostJobPage() {
           />
         </div>
 
-        {/* PAY RATE (WITH RUPEE SYMBOL) */}
+        {/* PAY RATE */}
         <div>
           <label style={labelStyle}>Pay Rate</label>
           <div style={{ position: 'relative' }}>
@@ -112,9 +146,11 @@ export default function PostJobPage() {
             <label style={labelStyle}>Location</label>
             <input 
               type="text" 
+              placeholder="e.g. Boring Road, Patna"
               value={form.location}
               onChange={e => setForm({...form, location: e.target.value})}
               style={inputStyle}
+              required
             />
           </div>
         </div>
