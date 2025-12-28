@@ -1,160 +1,173 @@
 'use client';
-import { useState, useEffect, use } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import { useRouter, useParams } from 'next/navigation';
+import Link from 'next/link';
 import { ArrowLeft, MapPin, Clock, DollarSign, Briefcase, CheckCircle } from 'lucide-react';
-import JobMap from '../../../../components/JobMap';
+import { BottomNav } from '../../../components/BottomNav';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
-export default function JobDetailsPage({ params }) {
-  // Unwrap params (Next.js 15+ requirement)
-  const { id } = use(params);
-  
+export default function JobDetailsPage() {
+  const { id } = useParams(); // Get the ID from the URL
   const router = useRouter();
+  
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
   const [applying, setApplying] = useState(false);
   const [hasApplied, setHasApplied] = useState(false);
-  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const fetchData = async () => {
-      // 1. Get User
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
+    fetchJobDetails();
+  }, [id]);
 
-      // 2. Fetch Job Details
-      const { data: jobData, error } = await supabase
-        .from('jobs')
+  const fetchJobDetails = async () => {
+    // 1. Get Job Info
+    const { data: jobData, error } = await supabase
+      .from('jobs')
+      .select('*') // We can also select provider info here if we join tables, but keeping it simple
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error("Error fetching job:", error);
+      alert("Job not found!");
+      router.push('/seeker/dashboard');
+      return;
+    }
+    setJob(jobData);
+
+    // 2. Check if I already applied?
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: appData } = await supabase
+        .from('applications')
         .select('*')
-        .eq('id', id)
+        .eq('job_id', id)
+        .eq('seeker_id', user.id) // This works because profile.id = auth.user.id
         .single();
       
-      if (error) {
-        alert("Job not found!");
-        router.push('/seeker/dashboard');
-        return;
-      }
-      setJob(jobData);
-
-      // 3. Check if already applied
-      if (user) {
-        const { data: appData } = await supabase
-          .from('applications')
-          .select('*')
-          .eq('job_id', id)
-          .eq('seeker_id', user.id)
-          .single();
-        
-        if (appData) setHasApplied(true);
-      }
-
-      setLoading(false);
-    };
-
-    fetchData();
-  }, [id, router]);
-
-  const handleApply = async () => {
-    if (!user) return router.push('/login');
-    setApplying(true);
-
-    try {
-      const { error } = await supabase.from('applications').insert({
-        job_id: id,
-        seeker_id: user.id
-      });
-
-      if (error) throw error;
-      
-      setHasApplied(true);
-      alert("Application Sent! The provider will contact you.");
-    } catch (err) {
-      alert("Error: " + err.message);
-    } finally {
-      setApplying(false);
+      if (appData) setHasApplied(true);
     }
+
+    setLoading(false);
   };
 
-  if (loading) return <div style={{ padding: '40px', textAlign: 'center' }}>Loading job details...</div>;
+  const handleApply = async () => {
+    setApplying(true);
+    
+    // 1. Get Current User
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+
+    // 2. Insert Application
+    const { error } = await supabase.from('applications').insert({
+      job_id: id,
+      seeker_id: user.id, // Links to your Profile
+      status: 'pending'
+    });
+
+    if (error) {
+      alert("Failed to apply: " + error.message);
+    } else {
+      setHasApplied(true);
+      alert("Application Sent Successfully! 🎉");
+    }
+    setApplying(false);
+  };
+
+  if (loading) return <div style={{ padding: '40px', textAlign: 'center' }}>Loading Job Details...</div>;
   if (!job) return null;
 
   return (
-    <div style={{ background: '#f8fafc', minHeight: '100vh', paddingBottom: '80px' }}>
+    <div style={{ paddingBottom: '90px', fontFamily: 'Arial, sans-serif', minHeight: '100vh', background: '#f8fafc' }}>
       
       {/* HEADER */}
-      <div style={{ background: 'white', padding: '20px', display: 'flex', alignItems: 'center', gap: '15px', borderBottom: '1px solid #eee' }}>
-        <Link href="/seeker/dashboard">
-          <ArrowLeft size={24} color="#333" />
+      <div style={{ background: 'white', padding: '20px', display: 'flex', alignItems: 'center', gap: '15px', borderBottom: '1px solid #e2e8f0' }}>
+        <Link href="/seeker/dashboard" style={{ color: '#334155' }}>
+          <ArrowLeft size={24} />
         </Link>
-        <h1 style={{ fontSize: '1.2rem', fontWeight: 'bold', margin: 0 }}>Job Details</h1>
+        <h2 style={{ margin: 0, fontSize: '1.2rem', color: '#1e293b' }}>Job Details</h2>
       </div>
 
-      <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
-        
-        {/* MAIN CARD */}
-        <div style={{ background: 'white', borderRadius: '16px', padding: '25px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', marginBottom: '20px' }}>
-          <span style={{ background: '#e0f2fe', color: '#0284c7', padding: '6px 12px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold', display: 'inline-block', marginBottom: '15px' }}>
-            {job.job_type}
-          </span>
+      {/* JOB CARD */}
+      <div style={{ padding: '20px' }}>
+        <div style={{ background: 'white', borderRadius: '16px', padding: '25px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
           
-          <h2 style={{ fontSize: '1.8rem', fontWeight: '800', color: '#1e293b', marginBottom: '10px' }}>{job.title}</h2>
+          <h1 style={{ fontSize: '1.5rem', margin: '0 0 10px 0', color: '#0f172a' }}>{job.title}</h1>
           
-          <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', color: '#64748b', marginBottom: '25px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><MapPin size={18} /> {job.location_name}</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Clock size={18} /> {new Date(job.created_at).toLocaleDateString()}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', color: '#64748b' }}>
+             <MapPin size={18} /> {job.location_name || 'Patna'}
           </div>
 
-          <div style={{ borderTop: '1px solid #f1f5f9', borderBottom: '1px solid #f1f5f9', padding: '20px 0', marginBottom: '20px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.5rem', fontWeight: 'bold', color: '#16a34a' }}>
-              <DollarSign size={28} />
-              {job.pay_rate}
+          <hr style={{ border: 'none', borderTop: '1px solid #f1f5f9', margin: '20px 0' }} />
+
+          {/* DETAILS GRID */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '25px' }}>
+            <div style={detailBoxStyle}>
+               <DollarSign size={20} color="#059669" />
+               <div>
+                 <span style={labelStyle}>Pay Rate</span>
+                 <div style={valueStyle}>{job.pay_rate}</div>
+               </div>
+            </div>
+            <div style={detailBoxStyle}>
+               <Clock size={20} color="#2563eb" />
+               <div>
+                 <span style={labelStyle}>Job Type</span>
+                 <div style={valueStyle}>{job.job_type}</div>
+               </div>
             </div>
           </div>
 
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '10px' }}>Description</h3>
-          <p style={{ lineHeight: '1.6', color: '#475569', fontSize: '1rem' }}>
-            {job.description}
+          <h3 style={{ fontSize: '1.1rem', marginBottom: '10px' }}>Description</h3>
+          <p style={{ color: '#475569', lineHeight: '1.6' }}>
+            {job.description || "No description provided."}
           </p>
+
         </div>
-
-        {/* APPLY BUTTON (Fixed at bottom on mobile, or inline on desktop) */}
-        <div style={{ position: 'fixed', bottom: 0, left: 0, width: '100%', background: 'white', padding: '20px', borderTop: '1px solid #eee', display: 'flex', justifyContent: 'center' }}>
-          {hasApplied ? (
-            <button disabled style={{ width: '100%', maxWidth: '500px', padding: '16px', background: '#dcfce7', color: '#166534', border: 'none', borderRadius: '12px', fontWeight: 'bold', fontSize: '1.1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
-              <CheckCircle size={24} />
-              Application Sent
-            </button>
-          ) : (
-            <button 
-              onClick={handleApply}
-              disabled={applying}
-              style={{ width: '100%', maxWidth: '500px', padding: '16px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 'bold', fontSize: '1.1rem', cursor: 'pointer', boxShadow: '0 4px 12px rgba(37, 99, 235, 0.3)' }}
-            >
-              {applying ? 'Sending...' : 'Apply Now'}
-            </button>
-          )}
-        </div>
-          {/* LOCATION MAP SECTION */}
-<div style={{ maxWidth: '800px', margin: '0 auto', padding: '0 20px 20px 20px' }}>
-  <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '15px', color: '#1e293b' }}>Job Location</h3>
-
-  {/* Pass the single job as an array */}
-  <JobMap jobs={[job]} isSingle={true} />
-
-  <p style={{ marginTop: '10px', fontSize: '0.9rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '5px' }}>
-    <MapPin size={16} /> {job.location_name}
-  </p>
-</div>
-
       </div>
-      <div style={{ height: '80px' }}></div> {/* Spacer for fixed button */}
+
+      {/* FOOTER ACTION BUTTON */}
+      <div style={{ 
+        position: 'fixed', bottom: '80px', left: 0, width: '100%', 
+        padding: '20px', background: 'white', borderTop: '1px solid #e2e8f0',
+        display: 'flex', justifyContent: 'center'
+      }}>
+        {hasApplied ? (
+          <button disabled style={{ 
+            width: '100%', maxWidth: '400px', padding: '16px', borderRadius: '12px', border: 'none',
+            background: '#dcfce7', color: '#166534', fontSize: '1.1rem', fontWeight: 'bold',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px'
+          }}>
+            <CheckCircle size={20} /> Applied
+          </button>
+        ) : (
+          <button 
+            onClick={handleApply}
+            disabled={applying}
+            style={{ 
+              width: '100%', maxWidth: '400px', padding: '16px', borderRadius: '12px', border: 'none',
+              background: '#2563eb', color: 'white', fontSize: '1.1rem', fontWeight: 'bold', cursor: 'pointer',
+              opacity: applying ? 0.7 : 1
+            }}
+          >
+            {applying ? 'Sending...' : 'Apply Now'}
+          </button>
+        )}
+      </div>
+
+      <BottomNav />
     </div>
   );
 }
 
+const detailBoxStyle = { display: 'flex', alignItems: 'center', gap: '12px', padding: '15px', background: '#f8fafc', borderRadius: '12px' };
+const labelStyle = { display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '4px' };
+const valueStyle = { fontWeight: 'bold', color: '#334155' };
