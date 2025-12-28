@@ -180,7 +180,7 @@ export default function HomeTab() {
              </div>
           ) : (
             filteredJobs.map((job) => (
-              <Link href={`#`} key={job.id} style={{ textDecoration: 'none', color: 'inherit' }}>
+              <Link href={`/seeker/job/${job.id}`} key={job.id} style={{ textDecoration: 'none', color: 'inherit' }}>
                 <div style={{
                   border: '1px solid #eee', borderRadius: '12px', padding: '15px', marginBottom: '15px',
                   boxShadow: '0 2px 5px rgba(0,0,0,0.05)', background: 'white'
@@ -270,3 +270,4 @@ export default function HomeTab() {
     </div>
   );
 }
+
