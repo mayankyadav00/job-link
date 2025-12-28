@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import { ArrowLeft, MapPin, Clock, DollarSign, Briefcase, CheckCircle } from 'lucide-react';
+import JobMap from '../../../../components/JobMap';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -139,9 +140,21 @@ export default function JobDetailsPage({ params }) {
             </button>
           )}
         </div>
+          {/* LOCATION MAP SECTION */}
+<div style={{ maxWidth: '800px', margin: '0 auto', padding: '0 20px 20px 20px' }}>
+  <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '15px', color: '#1e293b' }}>Job Location</h3>
+
+  {/* Pass the single job as an array */}
+  <JobMap jobs={[job]} isSingle={true} />
+
+  <p style={{ marginTop: '10px', fontSize: '0.9rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '5px' }}>
+    <MapPin size={16} /> {job.location_name}
+  </p>
+</div>
 
       </div>
       <div style={{ height: '80px' }}></div> {/* Spacer for fixed button */}
     </div>
   );
 }
+
