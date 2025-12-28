@@ -30,16 +30,15 @@ export default function AIChatBot() {
     setMessages(prev => [...prev, { role: 'user', text: userMessage }]);
 
     try {
-      // 1. Check if Key Exists
       const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
       if (!apiKey) {
         throw new Error("API Key is missing in Vercel/Env settings.");
       }
 
-      // 2. Initialize
       const genAI = new GoogleGenerativeAI(apiKey);
-      // Using 'gemini-1.5-flash' which is the standard free model now
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      
+      // FIX: Switched to 'gemini-pro' for better compatibility with your SDK version
+      const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
       const prompt = `You are a helpful assistant for JobLink. Keep answers short. User said: ${userMessage}`;
 
@@ -51,10 +50,9 @@ export default function AIChatBot() {
 
     } catch (error) {
       console.error("Chat Error:", error);
-      // DEBUG: Show the actual error on screen
       setMessages(prev => [...prev, { 
         role: 'model', 
-        text: `⚠️ Error: ${error.message || "Unknown Error"}. Please ensure the API Key is correct and redeploy.` 
+        text: `⚠️ Error: ${error.message || "Connection failed"}. Please check your API key.` 
       }]);
     } finally {
       setIsLoading(false);
@@ -105,6 +103,11 @@ export default function AIChatBot() {
                 {msg.text}
               </div>
             ))}
+            {isLoading && (
+              <div style={{ alignSelf: 'flex-start', background: '#eee', padding: '8px 12px', borderRadius: '12px', fontSize: '0.8rem', color: '#666' }}>
+                Typing...
+              </div>
+            )}
             <div ref={messagesEndRef} />
           </div>
 
@@ -115,7 +118,7 @@ export default function AIChatBot() {
               placeholder="Ask for help..." 
               style={{ flex: 1, padding: '10px 15px', borderRadius: '25px', border: '1px solid #cbd5e1', outline: 'none' }}
             />
-            <button onClick={handleSend} style={{ width: '45px', height: '45px', borderRadius: '50%', background: '#2563eb', color: 'white', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <button onClick={handleSend} disabled={isLoading} style={{ width: '45px', height: '45px', borderRadius: '50%', background: '#2563eb', color: 'white', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Send size={20} />
             </button>
           </div>
