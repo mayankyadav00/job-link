@@ -1,238 +1,272 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { X, Filter, Map, List, Search } from 'lucide-react';
-
-// --- IMPORTS (Make sure these files exist!) ---
 import { BottomNav } from '../../../components/BottomNav';
+import Link from 'next/link';
+import { useState, useEffect } from 'react';
+import { X, Filter, Map, List } from 'lucide-react';
+import { createClient } from '@supabase/supabase-js';
 import JobMap from '../../../components/JobMap';
 import AIChatBot from '../../../components/AIChatBot';
-import OnboardingForm from '../../../components/OnboardingForm';
+import OnboardingForm from '../../../components/OnboardingForm'; // <--- ADDED THIS IMPORT
 
-// --- SUPABASE SETUP ---
+// --- 1. SETUP DATABASE CONNECTION ---
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
-export default function SeekerDashboard() {
-  const router = useRouter();
+export default function HomeTab() {
   
-  // 1. STATE: User & Profile
-  const [user, setUser] = useState(null);
-  const [showOnboarding, setShowOnboarding] = useState(false);
-  const [loadingUser, setLoadingUser] = useState(true);
-
-  // 2. STATE: Jobs Data
+  // 2. STATE: Store Real Jobs from Database
   const [jobs, setJobs] = useState([]);
-  const [loadingJobs, setLoadingJobs] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);               // <--- ADDED
+  const [showOnboarding, setShowOnboarding] = useState(false); // <--- ADDED
 
-  // 3. STATE: UI Controls
-  const [viewMode, setViewMode] = useState('list'); // 'list' or 'map'
+  // 3. STATE: Filter UI visibility
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  
-  // 4. STATE: Filters
+
+  // 4. STATE: View Mode (List or Map)
+  const [viewMode, setViewMode] = useState('list'); // 'list' or 'map'
+
+  // 5. STATE: Store selected options
   const [selectedFilters, setSelectedFilters] = useState({
-    jobType: [], // Daily Wage, Contract, etc.
+    workMode: [],
+    department: [],
+    duration: []
   });
 
-  // --- EFFECT: CHECK USER & PROFILE ---
+  // --- EFFECT: FETCH REAL JOBS & CHECK USER ON LOAD ---
   useEffect(() => {
-    checkUser();
+    const initData = async () => {
+        // A. Check User Profile (For Signup Form)
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+            setUser(user);
+            // Check if profile exists and has data
+            const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+            // If no profile or no skills saved, show the form
+            if (!profile || !profile.skills) {
+                setShowOnboarding(true);
+            }
+        }
+
+        // B. Fetch Jobs
+        const { data, error } = await supabase
+            .from('jobs')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (data) setJobs(data);
+        setLoading(false);
+    };
+
+    initData();
   }, []);
 
-  const checkUser = async () => {
-    // A. Check Auth
-    const { data: { user }, error } = await supabase.auth.getUser();
-    if (error || !user) {
-      router.push('/login');
-      return;
-    }
-    setUser(user);
-
-    // B. Check Profile (Does the user have skills/name saved?)
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single();
-
-    // If profile is missing OR incomplete (no skills), show the popup
-    if (!profile || !profile.skills) {
-      setShowOnboarding(true);
-    }
-
-    setLoadingUser(false);
-    fetchJobs();
+  // --- LOGIC: CHECKBOX HANDLER ---
+  const handleCheckboxChange = (category, value) => {
+    setSelectedFilters(prev => {
+      const categoryList = prev[category];
+      if (categoryList.includes(value)) {
+        return { ...prev, [category]: categoryList.filter(item => item !== value) };
+      } else {
+        return { ...prev, [category]: [...categoryList, value] };
+      }
+    });
   };
 
-  // --- LOGIC: FETCH JOBS ---
-  const fetchJobs = async () => {
-    setLoadingJobs(true);
-    const { data, error } = await supabase
-      .from('jobs')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) console.error("Error fetching jobs:", error);
-    if (data) setJobs(data);
-    setLoadingJobs(false);
-  };
-
-  // --- LOGIC: FILTERING ---
+  // --- LOGIC: MASTER FILTER ---
   const filteredJobs = jobs.filter((job) => {
-    // 1. Search Text Match
-    const matchesSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          (job.location_name || '').toLowerCase().includes(searchTerm.toLowerCase());
-    if (!matchesSearch) return false;
-
-    // 2. Filter Checkboxes
-    if (selectedFilters.jobType.length > 0) {
-      if (!selectedFilters.jobType.includes(job.job_type)) return false;
+    // 1. Check Work Mode (Using location/address as proxy)
+    if (selectedFilters.workMode.length > 0) {
+       const match = selectedFilters.workMode.some(filter => 
+         (job.location_name || '').includes(filter) || (job.work_mode || '').includes(filter)
+       );
+       if (!match) return false;
+    }
+    
+    // 2. Check Department (Using title/description match)
+    if (selectedFilters.department.length > 0) {
+       const match = selectedFilters.department.some(filter => 
+         job.title.toLowerCase().includes(filter.toLowerCase()) || 
+         (job.description || '').toLowerCase().includes(filter.toLowerCase())
+       );
+       if (!match) return false;
+    }
+    
+    // 3. Check Duration (Using job_type)
+    if (selectedFilters.duration.length > 0) {
+       const match = selectedFilters.duration.some(filter => {
+         if (filter === "Short time (hours)") return job.job_type === "Daily Wage";
+         if (filter === "One day") return job.job_type === "Contract";
+         if (filter === "Long term") return job.job_type === "Full-time";
+         return job.job_type === filter;
+       });
+       if (!match) return false;
     }
 
     return true;
   });
 
-  const handleCheckboxChange = (value) => {
-    setSelectedFilters(prev => {
-      const list = prev.jobType;
-      if (list.includes(value)) return { jobType: list.filter(item => item !== value) };
-      return { jobType: [...list, value] };
-    });
+  // CATEGORY LISTS
+  const filterOptions = {
+    workMode: ["Work from home", "Remote Area", "Patna", "Kankarbagh"], 
+    department: ["Plumber", "Electrician", "Cleaner", "Helper"],
+    duration: ["Short time (hours)", "One day", "Long term"]
   };
 
-  if (loadingUser) return <div style={{ padding: '20px', textAlign: 'center' }}>Loading Dashboard...</div>;
-
   return (
-    <div style={{ paddingBottom: '90px', fontFamily: 'Arial, sans-serif', minHeight: '100vh', background: '#f8fafc' }}>
+    <div style={{ paddingBottom: '80px', fontFamily: 'Arial, sans-serif', position: 'relative' }}>
       
-      {/* --- 1. ONBOARDING POPUP (If Profile Incomplete) --- */}
+      {/* --- ADDED: ONBOARDING POPUP --- */}
       {showOnboarding && (
         <OnboardingForm 
           user={user} 
           role="seeker" 
-          onComplete={() => { setShowOnboarding(false); checkUser(); }} 
+          onComplete={() => setShowOnboarding(false)} 
         />
       )}
 
-      {/* --- 2. HEADER & SEARCH --- */}
-      <div style={{ background: 'white', padding: '20px', paddingBottom: '15px', position: 'sticky', top: 0, zIndex: 10, boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
-        
-        {/* Top Row: Title + Toggle */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-          <h1 style={{ fontSize: '1.4rem', margin: 0, color: '#1e293b' }}>Find Work 👷‍♂️</h1>
-          
-          <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: '12px', padding: '3px' }}>
-            <button onClick={() => setViewMode('list')} style={{ ...toggleBtnStyle, background: viewMode === 'list' ? 'white' : 'transparent', boxShadow: viewMode === 'list' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none' }}>
-              <List size={18} />
-            </button>
-            <button onClick={() => setViewMode('map')} style={{ ...toggleBtnStyle, background: viewMode === 'map' ? 'white' : 'transparent', boxShadow: viewMode === 'map' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none' }}>
-              <Map size={18} />
-            </button>
-          </div>
+      {/* HEADER */}
+      <div style={{ padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'white', boxShadow: '0 2px 5px rgba(0,0,0,0.05)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ width: '30px', height: '30px', background: '#4285F4', borderRadius: '50%' }}></div>
+          <h1 style={{ fontSize: '1.5rem', margin: 0 }}>JobLink</h1>
         </div>
-
-        {/* Search Bar + Filter */}
+        
         <div style={{ display: 'flex', gap: '10px' }}>
-          <div style={{ flex: 1, position: 'relative' }}>
-            <Search size={18} color="#94a3b8" style={{ position: 'absolute', left: '12px', top: '12px' }} />
-            <input 
-              type="text" 
-              placeholder="Search 'Driver', 'Patna'..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              style={{ width: '100%', padding: '10px 10px 10px 38px', borderRadius: '12px', border: '1px solid #e2e8f0', outline: 'none', background: '#f8fafc' }}
-            />
+          {/* VIEW TOGGLE BUTTONS */}
+          <div style={{ display: 'flex', background: '#f1f3f4', borderRadius: '20px', padding: '4px' }}>
+            <button 
+              onClick={() => setViewMode('list')}
+              style={{ padding: '6px 12px', border: 'none', background: viewMode === 'list' ? 'white' : 'transparent', borderRadius: '16px', cursor: 'pointer', boxShadow: viewMode === 'list' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none', display: 'flex', alignItems: 'center', gap: '5px' }}
+            >
+              <List size={16} />
+            </button>
+            <button 
+              onClick={() => setViewMode('map')}
+              style={{ padding: '6px 12px', border: 'none', background: viewMode === 'map' ? 'white' : 'transparent', borderRadius: '16px', cursor: 'pointer', boxShadow: viewMode === 'map' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none', display: 'flex', alignItems: 'center', gap: '5px' }}
+            >
+              <Map size={16} />
+            </button>
           </div>
-          <button onClick={() => setIsFilterOpen(true)} style={{ padding: '10px', borderRadius: '12px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer' }}>
-            <Filter size={20} color="#64748b" />
+
+          {/* FILTER BUTTON */}
+          <button 
+            onClick={() => setIsFilterOpen(true)}
+            style={{ 
+              display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 15px', 
+              background: '#f1f3f4', border: 'none', borderRadius: '20px', fontWeight: 'bold', cursor: 'pointer' 
+            }}
+          >
+            <span>Filter</span>
+            <Filter size={16} />
           </button>
         </div>
       </div>
 
-      {/* --- 3. MAIN CONTENT (List or Map) --- */}
+      {/* --- CONTENT AREA (List vs Map) --- */}
       {viewMode === 'list' ? (
+        /* LIST VIEW */
         <div style={{ padding: '20px' }}>
-          <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '15px' }}>
-            {loadingJobs ? 'Looking for jobs...' : `Found ${filteredJobs.length} jobs near you.`}
+          <p style={{ color: '#666', fontSize: '0.9rem', marginBottom: '15px' }}>
+            {loading ? "Loading jobs..." : `Found ${filteredJobs.length} jobs nearby.`}
           </p>
-          
-          {filteredJobs.length === 0 && !loadingJobs && (
-            <div style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>
-              <p>No jobs found matching your search.</p>
-              <button onClick={() => { setSearchTerm(''); setSelectedFilters({jobType:[]}); }} style={{ color: '#2563eb', background: 'none', border: 'none', textDecoration: 'underline' }}>Clear Filters</button>
-            </div>
-          )}
 
-          {filteredJobs.map((job) => (
-             <Link href={`#`} key={job.id} style={{ textDecoration: 'none', color: 'inherit' }}>
-               <div style={{ background: 'white', borderRadius: '16px', padding: '16px', marginBottom: '15px', border: '1px solid #f1f5f9', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
-                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                   <div>
-                     <h3 style={{ margin: '0 0 5px 0', fontSize: '1.1rem', color: '#0f172a' }}>{job.title}</h3>
-                     <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem' }}>{job.location_name || 'Patna'}</p>
-                   </div>
-                   <span style={{ background: '#ecfdf5', color: '#059669', padding: '4px 8px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 'bold' }}>
-                     {job.pay_rate}
-                   </span>
-                 </div>
-                 <div style={{ marginTop: '12px', display: 'flex', gap: '8px' }}>
-                   <span style={tagStyle}>{job.job_type}</span>
-                   <span style={tagStyle}>{job.status}</span>
-                 </div>
-               </div>
-             </Link>
-          ))}
+          {filteredJobs.length === 0 && !loading ? (
+             <div style={{ textAlign: 'center', marginTop: '50px', color: '#999' }}>
+               <p>No jobs match these filters.</p>
+               <button onClick={() => setSelectedFilters({ workMode: [], department: [], duration: [] })} style={{ color: '#4285F4', textDecoration: 'underline', border: 'none', background: 'none', cursor: 'pointer' }}>Clear all filters</button>
+             </div>
+          ) : (
+            filteredJobs.map((job) => (
+              <Link href={`#`} key={job.id} style={{ textDecoration: 'none', color: 'inherit' }}>
+                <div style={{
+                  border: '1px solid #eee', borderRadius: '12px', padding: '15px', marginBottom: '15px',
+                  boxShadow: '0 2px 5px rgba(0,0,0,0.05)', background: 'white'
+                }}>
+                  <h3 style={{ margin: '0 0 5px 0' }}>{job.title}</h3>
+                  <p style={{ margin: '0 0 10px 0', color: '#666', fontSize: '0.9rem' }}>
+                    {job.job_type || 'General'} • {job.location_name || 'Patna'}
+                  </p>
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <span style={{ background: '#e3f2fd', color: '#1565c0', padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem' }}>
+                      {job.job_type}
+                    </span>
+                    <span style={{ background: '#e8f5e9', color: '#2e7d32', padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem' }}>
+                      {job.pay_rate}
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            ))
+          )}
         </div>
       ) : (
         /* MAP VIEW */
-        <div style={{ height: 'calc(100vh - 180px)', width: '100%' }}>
+        <div style={{ padding: '20px', height: 'calc(100vh - 150px)' }}>
           <JobMap jobs={filteredJobs} />
         </div>
       )}
 
-      {/* --- 4. FILTER MODAL --- */}
+      {/* --- FILTER POPUP (Modal) --- */}
       {isFilterOpen && (
-        <div style={modalOverlayStyle}>
-          <div style={modalContentStyle}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
-              <h2 style={{ margin: 0 }}>Filter Jobs</h2>
-              <button onClick={() => setIsFilterOpen(false)} style={{ background: 'none', border: 'none' }}><X /></button>
-            </div>
+        <div style={{
+          position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+          backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 2000,
+          display: 'flex', justifyContent: 'flex-end'
+        }}>
+          <div style={{
+            width: '85%', maxWidth: '400px', height: '100%', backgroundColor: 'white',
+            padding: '25px', overflowY: 'auto', animation: 'slideIn 0.3s ease-out'
+          }}>
             
-            <h4 style={{ marginBottom: '10px' }}>Job Type</h4>
-            {['Daily Wage', 'Contract', 'Full-time'].map(type => (
-              <label key={type} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 0' }}>
-                <input 
-                  type="checkbox" 
-                  checked={selectedFilters.jobType.includes(type)}
-                  onChange={() => handleCheckboxChange(type)}
-                  style={{ width: '20px', height: '20px' }}
-                />
-                {type}
-              </label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+              <h2 style={{ margin: 0 }}>Listing Filters</h2>
+              <button onClick={() => setIsFilterOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+                <X size={24} />
+              </button>
+            </div>
+
+            {Object.entries(filterOptions).map(([category, options]) => (
+              <div key={category} style={{ marginBottom: '30px' }}>
+                <h3 style={{ fontSize: '1rem', marginBottom: '15px', textTransform: 'capitalize' }}>
+                  {category.replace(/([A-Z])/g, ' $1').trim()}
+                </h3>
+                {options.map(option => (
+                  <label key={option} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px', cursor: 'pointer' }}>
+                    <input 
+                      type="checkbox" 
+                      checked={selectedFilters[category].includes(option)}
+                      onChange={() => handleCheckboxChange(category, option)}
+                      style={{ transform: 'scale(1.2)' }}
+                    />
+                    <span style={{ color: '#555' }}>{option}</span>
+                  </label>
+                ))}
+              </div>
             ))}
 
-            <button onClick={() => setIsFilterOpen(false)} style={{ width: '100%', marginTop: '20px', padding: '15px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '12px', fontSize: '1rem', fontWeight: 'bold' }}>
+            <button 
+              onClick={() => setIsFilterOpen(false)}
+              style={{ width: '100%', padding: '15px', background: '#4285F4', color: 'white', border: 'none', borderRadius: '10px', fontSize: '1rem', fontWeight: 'bold', cursor: 'pointer' }}
+            >
               Apply Filters
             </button>
+
           </div>
         </div>
       )}
 
-      {/* --- 5. GLOBAL COMPONENTS --- */}
-      <AIChatBot />
       <BottomNav />
+      
+      <style jsx global>{`
+        @keyframes slideIn {
+          from { transform: translateX(100%); }
+          to { transform: translateX(0); }
+        }
+      `}</style>
+      <AIChatBot />
     </div>
   );
 }
-
-// --- STYLES ---
-const toggleBtnStyle = { padding: '8px 12px', border: 'none', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center' };
-const tagStyle = { background: '#f1f5f9', color: '#475569', padding: '4px 10px', borderRadius: '6px', fontSize: '0.8rem' };
-const modalOverlayStyle = { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'flex-end' };
-const modalContentStyle = { background: 'white', width: '100%', maxWidth: '480px', borderRadius: '20px 20px 0 0', padding: '25px', animation: 'slideUp 0.3s' };
