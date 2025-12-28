@@ -7,37 +7,7 @@ export default function AIChatBot() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
-  const handleSend = async () => {
-    if (!input.trim()) return;
-    const userMessage = input;
-    setInput('');
-    setIsLoading(true);
-    setMessages(prev => [...prev, { role: 'user', text: userMessage }]);
-
-    try {
-      // Call OUR Server Route
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userMessage }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) throw new Error(data.error || "Server Error");
-
-      setMessages(prev => [...prev, { role: 'model', text: data.text }]);
-
-    } catch (error) {
-      console.error("Chat Error:", error);
-      setMessages(prev => [...prev, { 
-        role: 'model', 
-        text: "I'm having trouble connecting. Please try again later." 
-      }]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  
 
   const [messages, setMessages] = useState([
     { 
