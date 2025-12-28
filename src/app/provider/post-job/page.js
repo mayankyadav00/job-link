@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 import { ProviderBottomNav } from '../../../components/ProviderBottomNav';
-import { GoogleGenerativeAI } from "@google/generative-ai"; 
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -13,7 +12,6 @@ const supabase = createClient(
 export default function PostJobPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [aiLoading, setAiLoading] = useState(false);
   
   const [form, setForm] = useState({
     title: '',
@@ -22,34 +20,6 @@ export default function PostJobPage() {
     job_type: 'Daily Wage',
     location: 'Patna' 
   });
-
-  // --- GEMINI AI MAGIC ---
-  const handleAutoWrite = async () => {
-    if (!form.title) return alert("Please enter a Job Title first!");
-    
-    const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
-    if (!apiKey) return alert("Missing API Key! Add NEXT_PUBLIC_GEMINI_API_KEY to .env.local");
-
-    setAiLoading(true);
-    try {
-      const genAI = new GoogleGenerativeAI(apiKey);
-      // FIX: Changed model to 'gemini-1.5-flash' which is the current stable version
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-      const prompt = `Write a short, professional job description (max 40 words) for a "${form.title}" role in Patna. Keep it simple and inviting for daily workers.`;
-      
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text();
-      
-      setForm(prev => ({ ...prev, description: text }));
-    } catch (error) {
-      console.error("AI Error:", error);
-      alert("AI Error: " + (error.message || "Failed to generate text"));
-    } finally {
-      setAiLoading(false);
-    }
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -96,25 +66,11 @@ export default function PostJobPage() {
           />
         </div>
 
-        {/* DESCRIPTION + AI BUTTON */}
+        {/* DESCRIPTION (Manual Input) */}
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <label style={labelStyle}>Description</label>
-            <button 
-              type="button" 
-              onClick={handleAutoWrite}
-              disabled={aiLoading}
-              style={{ 
-                background: 'linear-gradient(45deg, #6200ea, #b388ff)', 
-                color: 'white', border: 'none', padding: '5px 12px', borderRadius: '15px', 
-                fontSize: '0.8rem', cursor: 'pointer', fontWeight: 'bold', opacity: aiLoading ? 0.7 : 1
-              }}
-            >
-              {aiLoading ? '✨ Thinking...' : '✨ Auto-Write'}
-            </button>
-          </div>
+          <label style={labelStyle}>Description</label>
           <textarea 
-            placeholder="Describe the work..." 
+            placeholder="Describe the work (e.g. Fix kitchen sink, bring tools)..." 
             value={form.description}
             onChange={e => setForm({...form, description: e.target.value})}
             style={{ ...inputStyle, minHeight: '100px' }}
