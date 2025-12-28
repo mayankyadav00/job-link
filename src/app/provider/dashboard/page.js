@@ -1,192 +1,78 @@
 'use client';
-import { ProviderBottomNav } from '../../../components/ProviderBottomNav';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { Trash2, MoreVertical, X } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { ProviderBottomNav } from '../../../components/ProviderBottomNav';
+import OnboardingForm from '../../../components/OnboardingForm'; // Import New Component
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-);
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 
 export default function ProviderDashboard() {
-  const [myJobs, setMyJobs] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ active: 0, totalApplicants: 0 });
-  
-  const [expandedJobId, setExpandedJobId] = useState(null);
-  const [applicants, setApplicants] = useState({});
-  const [settingsOpenId, setSettingsOpenId] = useState(null); // Controls which gear menu is open
+  const router = useRouter();
+  const [user, setUser] = useState(null);
+  const [jobs, setJobs] = useState([]);
+  const [showOnboarding, setShowOnboarding] = useState(false); // State for popup
 
   useEffect(() => {
-    fetchDashboardData();
+    checkUser();
   }, []);
 
-  const fetchDashboardData = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+  const checkUser = async () => {
+    // 1. Get Auth User
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error || !user) { router.push('/login'); return; }
+    setUser(user);
 
-    const { data: jobs } = await supabase
-      .from('jobs')
-      .select('*, applications(count)')
-      .eq('provider_id', user.id)
-      .order('created_at', { ascending: false });
-
-    if (jobs) {
-      setMyJobs(jobs);
-      const activeCount = jobs.filter(j => j.status === 'open').length;
-      const totalApps = jobs.reduce((sum, job) => sum + (job.applications[0]?.count || 0), 0);
-      setStats({ active: activeCount, totalApplicants: totalApps });
-    }
-    setLoading(false);
-  };
-
-  const handleViewApplicants = async (jobId) => {
-    if (expandedJobId === jobId) {
-      setExpandedJobId(null);
-      return;
-    }
-    const { data } = await supabase
-      .from('applications')
-      .select('*, seekers(full_name, phone, resume_url)')
-      .eq('job_id', jobId);
-
-    if (data) {
-      setApplicants(prev => ({ ...prev, [jobId]: data }));
-      setExpandedJobId(jobId);
-    }
-  };
-
-  // --- DELETE LOGIC ---
-  const handleDeleteJob = async (jobId) => {
-    if (!confirm("Are you sure you want to delete this job permanently?")) return;
+    // 2. CHECK PROFILE (The Magic Step)
+    const { data: profile } = await supabase.from('profiles').select('business_name').eq('id', user.id).single();
     
-    const { error } = await supabase.from('jobs').delete().eq('id', jobId);
-    if (error) {
-      alert("Error deleting: " + error.message);
-    } else {
-      setSettingsOpenId(null); // Close menu
-      fetchDashboardData(); // Refresh list
+    // If profile missing OR business_name is empty -> Show Form
+    if (!profile || !profile.business_name) {
+      setShowOnboarding(true);
     }
+
+    // 3. Fetch Jobs
+    fetchJobs(user.id);
   };
 
-  const updateStatus = async (appId, status, jobId) => {
-    await supabase.from('applications').update({ status }).eq('id', appId);
-    handleViewApplicants(jobId);
+  const fetchJobs = async (userId) => {
+    // Note: We use provider_id (which is now linked to profiles)
+    const { data } = await supabase.from('jobs').select('*').eq('provider_id', userId);
+    if (data) setJobs(data);
+  };
+
+  const handleDelete = async (jobId) => {
+    if (!confirm("Are you sure?")) return;
+    await supabase.from('jobs').delete().eq('id', jobId);
+    fetchJobs(user?.id);
   };
 
   return (
-    <div style={{ paddingBottom: '80px', fontFamily: 'Arial, sans-serif', backgroundColor: '#f9f9f9', minHeight: '100vh' }}>
+    <div style={{ padding: '20px', paddingBottom: '80px', fontFamily: 'Arial, sans-serif' }}>
       
-      {/* HEADER */}
-      <div style={{ padding: '20px', background: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1 style={{ fontSize: '1.5rem', margin: 0 }}>My Listings</h1>
-        <div style={{ width: '30px', height: '30px', background: '#34A853', borderRadius: '50%' }}></div>
-      </div>
+      {/* SHOW ONBOARDING IF NEEDED */}
+      {showOnboarding && (
+        <OnboardingForm 
+          user={user} 
+          role="provider" 
+          onComplete={() => { setShowOnboarding(false); checkUser(); }} 
+        />
+      )}
 
-      {/* STATS ROW */}
-      <div style={{ display: 'flex', gap: '15px', padding: '20px' }}>
-        <div style={{ flex: 1, background: '#34A853', padding: '15px', borderRadius: '12px', color: 'white' }}>
-          <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>{loading ? '-' : stats.active}</div>
-          <div style={{ fontSize: '0.9rem', opacity: 0.9 }}>Active Jobs</div>
-        </div>
-        <div style={{ flex: 1, background: 'white', padding: '15px', borderRadius: '12px', border: '1px solid #eee' }}>
-          <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#333' }}>{loading ? '-' : stats.totalApplicants}</div>
-          <div style={{ fontSize: '0.9rem', color: '#666' }}>Total Applicants</div>
-        </div>
-      </div>
-
-      {/* JOB LIST */}
-      <div style={{ padding: '0 20px' }}>
-        <h3 style={{ color: '#666', marginTop: '10px' }}>Recent Posts</h3>
-        
-        {loading ? <p>Loading jobs...</p> : myJobs.length === 0 ? <p style={{color:'#999'}}>No jobs posted yet.</p> : null}
-
-        {myJobs.map((job) => (
-          <div key={job.id} style={{
-            background: 'white', borderRadius: '12px', padding: '20px', marginBottom: '15px',
-            boxShadow: '0 2px 5px rgba(0,0,0,0.05)', position: 'relative',
-            borderLeft: job.status === 'open' ? '5px solid #34A853' : '5px solid #ccc'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <h3 style={{ margin: 0 }}>{job.title}</h3>
-              <span style={{ 
-                background: job.status === 'open' ? '#e8f5e9' : '#eee', 
-                color: job.status === 'open' ? '#2e7d32' : '#666',
-                padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem', textTransform: 'capitalize' 
-              }}>
-                {job.status}
-              </span>
-            </div>
-            
-            <p style={{ color: '#666', fontSize: '0.9rem', margin: '5px 0 15px 0' }}>📍 {job.location_name}</p>
-            
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button 
-                onClick={() => handleViewApplicants(job.id)}
-                style={{ flex: 1, padding: '10px', background: '#f1f8e9', color: '#2e7d32', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
-              >
-                {job.applications[0].count} Applicants {expandedJobId === job.id ? '▲' : '▼'}
-              </button>
-              
-              {/* SETTINGS GEAR BUTTON */}
-              <div style={{ position: 'relative' }}>
-                <button 
-                  onClick={() => setSettingsOpenId(settingsOpenId === job.id ? null : job.id)}
-                  style={{ padding: '10px 15px', background: '#eee', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
-                >
-                  ⚙️
-                </button>
-                
-                {/* DELETE POPUP MENU */}
-                {settingsOpenId === job.id && (
-                  <div style={{ 
-                    position: 'absolute', right: 0, top: '45px', background: 'white', 
-                    boxShadow: '0 4px 15px rgba(0,0,0,0.2)', borderRadius: '8px', padding: '10px', 
-                    width: '150px', zIndex: 10 
-                  }}>
-                    <button 
-                      onClick={() => handleDeleteJob(job.id)}
-                      style={{ 
-                        background: 'white', color: '#d32f2f', border: 'none', width: '100%', 
-                        padding: '8px', textAlign: 'left', fontWeight: 'bold', cursor: 'pointer',
-                        display: 'flex', alignItems: 'center', gap: '8px'
-                      }}
-                    >
-                      <Trash2 size={16} /> Delete Job
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* APPLICANT LIST */}
-            {expandedJobId === job.id && (
-              <div style={{ marginTop: '15px', paddingTop: '15px', borderTop: '1px solid #eee' }}>
-                {applicants[job.id]?.length === 0 ? <p style={{ fontSize: '0.9rem', color: '#999' }}>No applicants yet.</p> : applicants[job.id]?.map(app => (
-                  <div key={app.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', padding: '10px', background: '#f9f9f9', borderRadius: '8px' }}>
-                    <div>
-                      <div style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>{app.seekers.full_name}</div>
-                      <div style={{ fontSize: '0.8rem', color: '#666' }}>{app.seekers.phone}</div>
-                      {app.seekers.resume_url && <a href={app.seekers.resume_url} target="_blank" style={{ fontSize: '0.8rem', color: '#34A853' }}>View Resume</a>}
-                    </div>
-                    <div style={{ display: 'flex', gap: '5px' }}>
-                      {app.status === 'pending' ? (
-                        <>
-                          <button onClick={() => updateStatus(app.id, 'accepted', job.id)} style={{ background: '#dcfce7', border: 'none', borderRadius: '50%', width: '30px', height: '30px', cursor: 'pointer', color: 'green' }}>✓</button>
-                          <button onClick={() => updateStatus(app.id, 'rejected', job.id)} style={{ background: '#fee2e2', border: 'none', borderRadius: '50%', width: '30px', height: '30px', cursor: 'pointer', color: 'red' }}>✕</button>
-                        </>
-                      ) : (
-                        <span style={{ fontSize: '0.8rem', fontWeight: 'bold', color: app.status === 'accepted' ? 'green' : 'red' }}>{app.status}</span>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+      <h1 style={{ fontSize: '1.8rem' }}>Provider Dashboard</h1>
+      
+      {/* ... (Keep your existing Job Card UI here) ... */}
+      <div style={{ marginTop: '20px' }}>
+        <h2 style={{ fontSize: '1.2rem', color: '#666' }}>Your Posted Jobs</h2>
+        {jobs.length === 0 ? <p>No active jobs.</p> : jobs.map(job => (
+             <div key={job.id} style={{ padding: '15px', background: 'white', margin: '10px 0', borderRadius: '10px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>
+               <h3>{job.title}</h3>
+               <p>{job.pay_rate}</p>
+               <button onClick={() => handleDelete(job.id)} style={{ color: 'red', background: 'none', border: 'none' }}>Delete</button>
+             </div>
         ))}
       </div>
+
       <ProviderBottomNav />
     </div>
   );
