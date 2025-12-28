@@ -1,6 +1,5 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { MessageCircle, X, Send, Bot } from 'lucide-react';
 
 export default function AIChatBot() {
@@ -20,22 +19,6 @@ export default function AIChatBot() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isOpen]);
 
-  // --- FALLBACK LOGIC (OFFLINE MODE) ---
-  // If the API fails, we use this simple logic to give a helpful answer.
-  const getMockResponse = (text) => {
-    const lower = text.toLowerCase();
-    if (lower.includes('job') || lower.includes('work') || lower.includes('driver') || lower.includes('plumber')) {
-      return "You can find all available jobs in the 'Search' tab at the bottom of the screen. Try typing the role you are looking for there!";
-    }
-    if (lower.includes('post') || lower.includes('hire') || lower.includes('provider')) {
-      return "To hire someone, please switch to the 'Provider' dashboard and click 'Post Job'.";
-    }
-    if (lower.includes('hello') || lower.includes('hi')) {
-      return "Hello! How can I help you today?";
-    }
-    return "I am currently running in offline mode. Please check the 'Search' tab to explore jobs, or the 'Dashboard' to view your status.";
-  };
-
   const handleSend = async () => {
     if (!input.trim()) return;
 
@@ -47,30 +30,27 @@ export default function AIChatBot() {
     setMessages(prev => [...prev, { role: 'user', text: userMessage }]);
 
     try {
-      const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
-      
-      // If no key, throw error immediately to trigger fallback
-      if (!apiKey) throw new Error("No API Key");
+      // 2. Call OUR Server API (Instead of Google directly)
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: userMessage }),
+      });
 
-      // 2. Try Online AI
-      const genAI = new GoogleGenerativeAI(apiKey);
-      // We try the most generic model name that usually works
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-      
-      const result = await model.generateContent(`You are a helpful assistant for JobLink. Keep answers short. User said: ${userMessage}`);
-      const response = await result.response;
-      const text = response.text();
+      const data = await response.json();
 
-      setMessages(prev => [...prev, { role: 'model', text: text }]);
+      if (!response.ok) throw new Error(data.details || "Server Error");
+
+      // 3. Add AI Response
+      setMessages(prev => [...prev, { role: 'model', text: data.text }]);
 
     } catch (error) {
-      console.warn("AI API Failed, switching to mock response:", error);
-      
-      // 3. Fallback to Smart Mock Response (Seamless User Experience)
-      setTimeout(() => {
-        const mockReply = getMockResponse(userMessage);
-        setMessages(prev => [...prev, { role: 'model', text: mockReply }]);
-      }, 500); // Small delay to feel natural
+      console.error("Chat Error:", error);
+      // Fallback message if server fails
+      setMessages(prev => [...prev, { 
+        role: 'model', 
+        text: "I'm having trouble connecting to the server. Please check your internet." 
+      }]);
     } finally {
       setIsLoading(false);
     }
