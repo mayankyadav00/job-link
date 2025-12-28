@@ -180,3 +180,4 @@ export default function PostJobPage() {
 
 const labelStyle = { display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#555' };
 const inputStyle = { width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #ddd', fontSize: '1rem', outline: 'none' };
+
