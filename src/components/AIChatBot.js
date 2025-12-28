@@ -22,16 +22,13 @@ export default function AIChatBot() {
 
   const handleSend = async () => {
     if (!input.trim()) return;
-
     const userMessage = input;
     setInput('');
     setIsLoading(true);
-
-    // 1. Add User Message
     setMessages(prev => [...prev, { role: 'user', text: userMessage }]);
 
     try {
-      // 2. Call OUR Server API (Instead of Google directly)
+      // Call OUR Server Route
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -40,17 +37,15 @@ export default function AIChatBot() {
 
       const data = await response.json();
 
-      if (!response.ok) throw new Error(data.details || "Server Error");
+      if (!response.ok) throw new Error(data.error || "Server Error");
 
-      // 3. Add AI Response
       setMessages(prev => [...prev, { role: 'model', text: data.text }]);
 
     } catch (error) {
       console.error("Chat Error:", error);
-      // Fallback message if server fails
       setMessages(prev => [...prev, { 
         role: 'model', 
-        text: "I'm having trouble connecting to the server. Please check your internet." 
+        text: "I'm having trouble connecting. Please try again later." 
       }]);
     } finally {
       setIsLoading(false);
