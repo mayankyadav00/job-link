@@ -86,6 +86,7 @@ export default function SystemCheck() {
         If Environment Variables are missing:<br/>
         1. Localhost: Check <code>.env.local</code> file.<br/>
         2. Vercel: Check Settings -> Environment Variables.
+          
       </p>
     </div>
   );
