@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, MapPin, Clock, DollarSign, Briefcase, CheckCircle } from 'lucide-react';
+// Note: Ensure this path is correct for your folder structure
 import { BottomNav } from '../../../../components/BottomNav';
 
 const supabase = createClient(
@@ -12,7 +13,7 @@ const supabase = createClient(
 );
 
 export default function JobDetailsPage() {
-  const { id } = useParams(); // Get the ID from the URL
+  const { id } = useParams(); 
   const router = useRouter();
   
   const [job, setJob] = useState(null);
@@ -21,19 +22,21 @@ export default function JobDetailsPage() {
   const [hasApplied, setHasApplied] = useState(false);
 
   useEffect(() => {
-    fetchJobDetails();
+    if (id) fetchJobDetails();
   }, [id]);
 
   const fetchJobDetails = async () => {
+    console.log("🔍 Fetching details for Job ID:", id);
+
     // 1. Get Job Info
     const { data: jobData, error } = await supabase
       .from('jobs')
-      .select('*') // We can also select provider info here if we join tables, but keeping it simple
+      .select('*')
       .eq('id', id)
       .single();
 
     if (error) {
-      console.error("Error fetching job:", error);
+      console.error("❌ Error fetching job:", error);
       alert("Job not found!");
       router.push('/seeker/dashboard');
       return;
@@ -43,14 +46,17 @@ export default function JobDetailsPage() {
     // 2. Check if I already applied?
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
-      const { data: appData } = await supabase
+      const { data: appData, error: appError } = await supabase
         .from('applications')
         .select('*')
         .eq('job_id', id)
-        .eq('seeker_id', user.id) // This works because profile.id = auth.user.id
-        .single();
+        .eq('seeker_id', user.id)
+        .maybeSingle(); // <--- Safer than .single() if 0 rows exist
       
-      if (appData) setHasApplied(true);
+      if (appData) {
+        console.log("✅ User has already applied:", appData);
+        setHasApplied(true);
+      }
     }
 
     setLoading(false);
@@ -58,6 +64,7 @@ export default function JobDetailsPage() {
 
   const handleApply = async () => {
     setApplying(true);
+    console.log("🚀 Starting Application Process...");
     
     // 1. Get Current User
     const { data: { user } } = await supabase.auth.getUser();
@@ -66,16 +73,38 @@ export default function JobDetailsPage() {
       return;
     }
 
+    // --- 🛡️ SAFETY CHECK: DOES PROFILE EXIST? ---
+    const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+        .eq('id', user.id)
+        .single();
+
+    if (profileError || !profile) {
+        console.error("❌ Profile Missing:", profileError);
+        alert("You must complete your Profile (Name/Skills) before applying!");
+        router.push('/seeker/dashboard'); // Will trigger the onboarding popup
+        return;
+    }
+
     // 2. Insert Application
-    const { error } = await supabase.from('applications').insert({
+    const { data, error } = await supabase.from('applications').insert({
       job_id: id,
-      seeker_id: user.id, // Links to your Profile
+      seeker_id: user.id, 
       status: 'pending'
-    });
+    }).select(); // <--- .select() returns the created row so we can see it
 
     if (error) {
-      alert("Failed to apply: " + error.message);
+      console.error("❌ Application Failed:", error);
+      // Catch "Duplicate" errors nicely
+      if (error.code === '23505') {
+          setHasApplied(true);
+          alert("You have already applied to this job.");
+      } else {
+          alert("Failed to apply: " + error.message);
+      }
     } else {
+      console.log("🎉 Application Success:", data);
       setHasApplied(true);
       alert("Application Sent Successfully! 🎉");
     }
@@ -171,7 +200,3 @@ export default function JobDetailsPage() {
 const detailBoxStyle = { display: 'flex', alignItems: 'center', gap: '12px', padding: '15px', background: '#f8fafc', borderRadius: '12px' };
 const labelStyle = { display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '4px' };
 const valueStyle = { fontWeight: 'bold', color: '#334155' };
-
-
-
-
