@@ -23,24 +23,30 @@ export default function PostJobPage() {
   });
 
   // --- SAFE GEOCODING (With Timeout) ---
-  const getCoordinates = async (address) => {
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY;
-    if (!apiKey) {
-      console.warn("No Google Maps API Key found. Skipping geocoding.");
+  // Function to get REAL coordinates from Google
+const getCoordinates = async (address) => {
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY;
+  const encodedAddress = encodeURIComponent(address);
+  
+  try {
+    const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedAddress}&key=${apiKey}`;
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (data.status === 'OK' && data.results.length > 0) {
+      const location = data.results[0].geometry.location;
+      console.log("📍 Real Coordinates Found:", location);
+      return { lat: location.lat, lng: location.lng };
+    } else {
+      console.error("Geocoding failed:", data.status);
+      alert("Could not find that location on Google Maps. Please try a major city/area.");
       return null;
     }
-
-    try {
-      console.log("Fetching coordinates for:", address);
-      
-      // Create a timeout so the app doesn't freeze if Google is slow
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
-
-      const response = await fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`,
-        { signal: controller.signal }
-      );
+  } catch (error) {
+    console.error("Network Error:", error);
+    return null;
+  }
+};
       clearTimeout(timeoutId);
 
       const data = await response.json();
@@ -214,3 +220,4 @@ export default function PostJobPage() {
 
 const labelStyle = { display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#555' };
 const inputStyle = { width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #ddd', fontSize: '1rem', outline: 'none' };
+
