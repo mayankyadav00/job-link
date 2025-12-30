@@ -55,14 +55,40 @@ export default function ProviderDashboard() {
     initData();
   }, []);
 
-  const fetchJobs = async (userId) => {
-    const { data, error } = await supabase
+  const fetchData = async () => {
+    console.log("Fetching job data for ID:", id); // Debug Log
+
+    // 1. Fetch Job Info
+    const { data: jobData, error: jobError } = await supabase
       .from('jobs')
       .select('*')
-      .eq('provider_id', userId) // Only show MY jobs
-      .order('created_at', { ascending: false });
+      .eq('id', id)
+      .single();
 
-    if (data) setJobs(data);
+    if (jobError) {
+      console.error("Job Error:", jobError);
+      return;
+    }
+    setJob(jobData);
+
+    // 2. Fetch Applicants
+    // We use the simpler syntax 'profiles(*)' which usually works better
+    const { data: appData, error: appError } = await supabase
+      .from('applications')
+      .select(`
+        *,
+        profiles (*) 
+      `)
+      .eq('job_id', id);
+
+    if (appError) {
+      console.error("Application Fetch Error:", appError);
+      alert("Error loading applicants. Check console.");
+    } else {
+      console.log("Applicants found:", appData); // See if data is arriving
+      setApplications(appData || []);
+    }
+    
     setLoading(false);
   };
 
@@ -171,4 +197,5 @@ export default function ProviderDashboard() {
     </div>
   );
 }
+
 
