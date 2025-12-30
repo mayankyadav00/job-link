@@ -133,14 +133,14 @@ export default function ProviderDashboard() {
         {jobs.map((job) => (
           <div key={job.id} style={{ background: 'white', borderRadius: '12px', padding: '20px', marginBottom: '15px', border: '1px solid #eee', boxShadow: '0 2px 5px rgba(0,0,0,0.05)', position: 'relative' }}>
             
-            {/* Title & Pay */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
-              <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#0f172a' }}>{job.title}</h3>
-              <span style={{ background: '#ecfdf5', color: '#059669', padding: '4px 8px', borderRadius: '6px', fontSize: '0.9rem', fontWeight: 'bold' }}>
-                {job.pay_rate}
-              </span>
-            </div>
-
+         {/* Click Title to Edit */}
+           <Link href={`/provider/job/${job.id}`} style={{ textDecoration: 'none' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px', cursor: 'pointer' }}>
+            <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#0f172a', textDecoration: 'underline' }}>{job.title} ✏️</h3>
+            ...
+             </div>
+           </Link>
+    ...
             {/* Details */}
             <div style={{ display: 'flex', gap: '15px', color: '#64748b', fontSize: '0.9rem', marginBottom: '15px' }}>
                <span>📍 {job.location_name || 'Patna'}</span>
@@ -171,3 +171,4 @@ export default function ProviderDashboard() {
     </div>
   );
 }
+
