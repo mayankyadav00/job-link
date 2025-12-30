@@ -3,12 +3,12 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Plus, Trash2, Briefcase } from 'lucide-react';
+import { Plus, Trash2, Briefcase, MapPin, Clock } from 'lucide-react';
 
 // --- IMPORTS ---
 import { ProviderBottomNav } from '../../../components/ProviderBottomNav';
 import AIChatBot from '../../../components/AIChatBot';
-import OnboardingForm from '../../../components/OnboardingForm'; // <--- ADDED
+import OnboardingForm from '../../../components/OnboardingForm';
 
 // --- SUPABASE SETUP ---
 const supabase = createClient(
@@ -23,7 +23,7 @@ export default function ProviderDashboard() {
   const [user, setUser] = useState(null);
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showOnboarding, setShowOnboarding] = useState(false); // <--- ADDED
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   // --- EFFECT: CHECK USER & PROFILE ---
   useEffect(() => {
@@ -55,40 +55,16 @@ export default function ProviderDashboard() {
     initData();
   }, []);
 
-  const fetchData = async () => {
-    console.log("Fetching job data for ID:", id); // Debug Log
-
-    // 1. Fetch Job Info
-    const { data: jobData, error: jobError } = await supabase
+  // --- LOGIC: FETCH ALL JOBS FOR THIS PROVIDER ---
+  const fetchJobs = async (userId) => {
+    const { data, error } = await supabase
       .from('jobs')
       .select('*')
-      .eq('id', id)
-      .single();
+      .eq('provider_id', userId) // Only show MY jobs
+      .order('created_at', { ascending: false });
 
-    if (jobError) {
-      console.error("Job Error:", jobError);
-      return;
-    }
-    setJob(jobData);
-
-    // 2. Fetch Applicants
-    // We use the simpler syntax 'profiles(*)' which usually works better
-    const { data: appData, error: appError } = await supabase
-      .from('applications')
-      .select(`
-        *,
-        profiles (*) 
-      `)
-      .eq('job_id', id);
-
-    if (appError) {
-      console.error("Application Fetch Error:", appError);
-      alert("Error loading applicants. Check console.");
-    } else {
-      console.log("Applicants found:", appData); // See if data is arriving
-      setApplications(appData || []);
-    }
-    
+    if (error) console.error("Error fetching jobs:", error);
+    if (data) setJobs(data);
     setLoading(false);
   };
 
@@ -159,18 +135,24 @@ export default function ProviderDashboard() {
         {jobs.map((job) => (
           <div key={job.id} style={{ background: 'white', borderRadius: '12px', padding: '20px', marginBottom: '15px', border: '1px solid #eee', boxShadow: '0 2px 5px rgba(0,0,0,0.05)', position: 'relative' }}>
             
-         {/* Click Title to Edit */}
-           <Link href={`/provider/job/${job.id}`} style={{ textDecoration: 'none' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px', cursor: 'pointer' }}>
-            <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#0f172a', textDecoration: 'underline' }}>{job.title} ✏️</h3>
-            ...
-             </div>
-           </Link>
-    ...
+            {/* LINK TO JOB MANAGER (Clickable Title) */}
+            <Link href={`/provider/job/${job.id}`} style={{ textDecoration: 'none' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px', cursor: 'pointer' }}>
+                <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#0f172a', textDecoration: 'underline' }}>{job.title} ✏️</h3>
+                <span style={{ background: '#ecfdf5', color: '#059669', padding: '4px 8px', borderRadius: '6px', fontSize: '0.9rem', fontWeight: 'bold' }}>
+                  {job.pay_rate}
+                </span>
+              </div>
+            </Link>
+
             {/* Details */}
             <div style={{ display: 'flex', gap: '15px', color: '#64748b', fontSize: '0.9rem', marginBottom: '15px' }}>
-               <span>📍 {job.location_name || 'Patna'}</span>
-               <span>🕒 {job.job_type}</span>
+               <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <MapPin size={14} /> {job.location_name || 'Patna'}
+               </div>
+               <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <Clock size={14} /> {job.job_type}
+               </div>
             </div>
 
             {/* Actions */}
@@ -197,5 +179,3 @@ export default function ProviderDashboard() {
     </div>
   );
 }
-
-
