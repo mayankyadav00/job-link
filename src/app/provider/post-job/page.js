@@ -12,7 +12,7 @@ const supabase = createClient(
 export default function PostJobPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [statusMsg, setStatusMsg] = useState(''); // For debugging feedback
+  const [statusMsg, setStatusMsg] = useState(''); 
   
   const [form, setForm] = useState({
     title: '',
@@ -22,46 +22,36 @@ export default function PostJobPage() {
     location: 'Patna' 
   });
 
-  // --- SAFE GEOCODING (With Timeout) ---
-  // Function to get REAL coordinates from Google
-const getCoordinates = async (address) => {
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY;
-  const encodedAddress = encodeURIComponent(address);
-  
-  try {
-    const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedAddress}&key=${apiKey}`;
-    const response = await fetch(url);
-    const data = await response.json();
-
-    if (data.status === 'OK' && data.results.length > 0) {
-      const location = data.results[0].geometry.location;
-      console.log("📍 Real Coordinates Found:", location);
-      return { lat: location.lat, lng: location.lng };
-    } else {
-      console.error("Geocoding failed:", data.status);
-      alert("Could not find that location on Google Maps. Please try a major city/area.");
-      return null;
+  // --- REAL GEOCODING FUNCTION ---
+  const getCoordinates = async (address) => {
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY;
+    
+    // Safety check for API Key
+    if (!apiKey || apiKey.includes('YourMapKey')) {
+        console.warn("⚠️ Maps API Key missing or invalid. Saving without coordinates.");
+        return null; 
     }
-  } catch (error) {
-    console.error("Network Error:", error);
-    return null;
-  }
-};
-      clearTimeout(timeoutId);
 
+    const encodedAddress = encodeURIComponent(address);
+    
+    try {
+      const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedAddress}&key=${apiKey}`;
+      const response = await fetch(url);
       const data = await response.json();
-      console.log("Google API Response:", data);
 
-      if (data.status === 'OK' && data.results[0]) {
-        const { lat, lng } = data.results[0].geometry.location;
-        return { lat, lng };
+      if (data.status === 'OK' && data.results.length > 0) {
+        const location = data.results[0].geometry.location;
+        console.log("📍 Real Coordinates Found:", location);
+        return { lat: location.lat, lng: location.lng };
       } else {
-        console.error("Geocoding Status:", data.status);
+        console.error("Geocoding failed:", data.status);
+        alert("Could not find that location on Google Maps. We will save the text address only.");
+        return null;
       }
     } catch (error) {
-      console.error("Geocoding Failed (Network/Timeout):", error);
+      console.error("Network Error during Geocoding:", error);
+      return null;
     }
-    return null;
   };
 
   const handleSubmit = async (e) => {
@@ -78,10 +68,11 @@ const getCoordinates = async (address) => {
         return;
       }
 
-      // 2. Get Coords (Don't let this block the whole process)
+      // 2. Get Coords
       setStatusMsg('Getting Location...');
       let lat = null;
       let lng = null;
+      
       const coords = await getCoordinates(form.location);
       if (coords) {
         lat = coords.lat;
@@ -90,12 +81,7 @@ const getCoordinates = async (address) => {
 
       // 3. Save to DB
       setStatusMsg('Saving to Database...');
-      console.log("Attempting INSERT with:", {
-        provider_id: user.id,
-        title: form.title,
-        ...form
-      });
-
+      
       const { data, error: dbError } = await supabase.from('jobs').insert({
         provider_id: user.id,
         title: form.title,
@@ -106,7 +92,7 @@ const getCoordinates = async (address) => {
         latitude: lat,
         longitude: lng,
         status: 'open'
-      }).select(); // .select() returns the inserted data so we can check it
+      }).select();
 
       if (dbError) {
         console.error("Database Insert Error:", dbError);
@@ -118,6 +104,7 @@ const getCoordinates = async (address) => {
       router.push('/provider/dashboard');
 
     } catch (error) {
+      console.error(error);
       alert("Failed: " + error.message);
       setStatusMsg('Error: ' + error.message);
     } finally {
@@ -220,4 +207,3 @@ const getCoordinates = async (address) => {
 
 const labelStyle = { display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#555' };
 const inputStyle = { width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #ddd', fontSize: '1rem', outline: 'none' };
-
