@@ -1,7 +1,7 @@
 'use server'; // This specific line makes everything secure
 
 export async function getGeminiResponse(userMessage) {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.API_KEY;
   if (!apiKey) return { error: "Server Error: API Key missing." };
 
   try {
