@@ -3,9 +3,11 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, MapPin, Clock, DollarSign, Briefcase, CheckCircle } from 'lucide-react';
-// Note: Ensure this path is correct for your folder structure
+import { ArrowLeft, MapPin, Clock, DollarSign, CheckCircle } from 'lucide-react';
+
+// --- IMPORTS ---
 import { BottomNav } from '../../../../components/BottomNav';
+import JobMap from '../../../../components/JobMap'; // <--- 1. Import the Map
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -26,8 +28,6 @@ export default function JobDetailsPage() {
   }, [id]);
 
   const fetchJobDetails = async () => {
-    console.log("🔍 Fetching details for Job ID:", id);
-
     // 1. Get Job Info
     const { data: jobData, error } = await supabase
       .from('jobs')
@@ -36,7 +36,6 @@ export default function JobDetailsPage() {
       .single();
 
     if (error) {
-      console.error("❌ Error fetching job:", error);
       alert("Job not found!");
       router.push('/seeker/dashboard');
       return;
@@ -46,17 +45,14 @@ export default function JobDetailsPage() {
     // 2. Check if I already applied?
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
-      const { data: appData, error: appError } = await supabase
+      const { data: appData } = await supabase
         .from('applications')
         .select('*')
         .eq('job_id', id)
         .eq('seeker_id', user.id)
-        .maybeSingle(); // <--- Safer than .single() if 0 rows exist
+        .maybeSingle();
       
-      if (appData) {
-        console.log("✅ User has already applied:", appData);
-        setHasApplied(true);
-      }
+      if (appData) setHasApplied(true);
     }
 
     setLoading(false);
@@ -64,49 +60,30 @@ export default function JobDetailsPage() {
 
   const handleApply = async () => {
     setApplying(true);
-    console.log("🚀 Starting Application Process...");
     
-    // 1. Get Current User
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      router.push('/login');
-      return;
-    }
+    if (!user) { router.push('/login'); return; }
 
-    // --- 🛡️ SAFETY CHECK: DOES PROFILE EXIST? ---
-    const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id, full_name')
-        .eq('id', user.id)
-        .single();
-
-    if (profileError || !profile) {
-        console.error("❌ Profile Missing:", profileError);
-        alert("You must complete your Profile (Name/Skills) before applying!");
-        router.push('/seeker/dashboard'); // Will trigger the onboarding popup
+    // Check Profile
+    const { data: profile } = await supabase.from('profiles').select('id').eq('id', user.id).single();
+    if (!profile) {
+        alert("Please complete your profile first.");
+        router.push('/seeker/dashboard');
         return;
     }
 
-    // 2. Insert Application
-    const { data, error } = await supabase.from('applications').insert({
+    // Insert Application
+    const { error } = await supabase.from('applications').insert({
       job_id: id,
       seeker_id: user.id, 
       status: 'pending'
-    }).select(); // <--- .select() returns the created row so we can see it
+    });
 
-    if (error) {
-      console.error("❌ Application Failed:", error);
-      // Catch "Duplicate" errors nicely
-      if (error.code === '23505') {
-          setHasApplied(true);
-          alert("You have already applied to this job.");
-      } else {
-          alert("Failed to apply: " + error.message);
-      }
+    if (error && error.code !== '23505') {
+      alert("Failed: " + error.message);
     } else {
-      console.log("🎉 Application Success:", data);
       setHasApplied(true);
-      alert("Application Sent Successfully! 🎉");
+      alert("Application Sent! 🎉");
     }
     setApplying(false);
   };
@@ -131,9 +108,22 @@ export default function JobDetailsPage() {
           
           <h1 style={{ fontSize: '1.5rem', margin: '0 0 10px 0', color: '#0f172a' }}>{job.title}</h1>
           
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', color: '#64748b' }}>
-             <MapPin size={18} /> {job.location_name || 'Patna'}
+          {/* --- 2. LOCATION & MAP SECTION --- */}
+          <div style={{ marginBottom: '20px' }}>
+             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px', color: '#64748b' }}>
+                <MapPin size={18} /> 
+                <span style={{ fontWeight: 'bold' }}>{job.location_name || 'Patna'}</span>
+             </div>
+             
+             {/* THE MAP IS HERE */}
+             <div style={{ width: '100%', height: '180px', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+               {/* We wrap "job" in brackets [job] because 
+                  JobMap expects an ARRAY of jobs, even if it's just one. 
+               */}
+               <JobMap jobs={[job]} />
+             </div>
           </div>
+          {/* ------------------------------- */}
 
           <hr style={{ border: 'none', borderTop: '1px solid #f1f5f9', margin: '20px 0' }} />
 
@@ -163,7 +153,7 @@ export default function JobDetailsPage() {
         </div>
       </div>
 
-      {/* FOOTER ACTION BUTTON */}
+      {/* FOOTER BUTTON */}
       <div style={{ 
         position: 'fixed', bottom: '80px', left: 0, width: '100%', 
         padding: '20px', background: 'white', borderTop: '1px solid #e2e8f0',
