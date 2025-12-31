@@ -5,19 +5,27 @@ export default function JobMap({ jobs }) {
   const mapRef = useRef(null);
 
   useEffect(() => {
-    // 1. Safety Check: Do we have an API Key?
-    if (!window.google) return;
+    // 1. Wait for Google Script to load
+    if (!window.google || !window.google.maps) return;
 
-    // 2. Create Map
+    // 2. Default Center (Patna)
+    const defaultCenter = { lat: 25.5941, lng: 85.1376 };
+    
+    // If we have jobs, center on the first one
+    const center = (jobs.length > 0 && jobs[0].latitude)
+      ? { lat: jobs[0].latitude, lng: jobs[0].longitude }
+      : defaultCenter;
+
+    // 3. Create Map
     const map = new window.google.maps.Map(mapRef.current, {
-      center: { lat: 25.5941, lng: 85.1376 }, // Default to Patna
-      zoom: 12,
+      center: center,
+      zoom: jobs.length === 1 ? 15 : 12, // Zoom in closer if it's a single job
+      disableDefaultUI: true, // Cleaner look for mobile
     });
 
-    // 3. Add Pins (ONLY for valid jobs)
+    // 4. Add Pins
     jobs.forEach((job) => {
-      // CRASH FIX: Check if lat/lng exist and are numbers
-      if (job.latitude && job.longitude && !isNaN(job.latitude)) {
+      if (job.latitude && job.longitude) {
         
         const marker = new window.google.maps.Marker({
           position: { lat: job.latitude, lng: job.longitude },
@@ -25,9 +33,13 @@ export default function JobMap({ jobs }) {
           title: job.title,
         });
 
-        // Add Click Info Window
+        // Info Window
         const infoWindow = new window.google.maps.InfoWindow({
-          content: `<div style="color:black"><b>${job.title}</b><br>₹${job.pay_rate}</div>`
+          content: `
+            <div style="color:black; padding:5px;">
+              <b style="font-size:14px">${job.title}</b><br>
+              <span style="color:#555">₹${job.pay_rate}</span>
+            </div>`
         });
 
         marker.addListener("click", () => {
@@ -35,6 +47,7 @@ export default function JobMap({ jobs }) {
         });
       }
     });
+
   }, [jobs]);
 
   return <div ref={mapRef} style={{ width: '100%', height: '100%', borderRadius: '15px' }} />;
