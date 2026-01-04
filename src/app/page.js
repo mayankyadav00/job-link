@@ -51,8 +51,8 @@ export default function LandingPage() {
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
   {/* LOGO ADDED BELOW */}
   <div className="hover" style={{ 
-    width: '32px', 
-    height: '32px', 
+    width: '64px', 
+    height: '64px', 
     borderRadius: '50%', 
     display: 'flex', 
     alignItems: 'center', 
