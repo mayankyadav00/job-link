@@ -48,10 +48,25 @@ export default function LandingPage() {
         transition: 'background 0.3s ease'
       }}>
         
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-           <div className="hover" style={{ width: '32px', height: '32px', background: '#4285F4', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold' }}>J</div>
-          <span className="hover" style={{ fontSize: '1.25rem', fontWeight: 'bold', color: theme.textMain }}>JobLink</span>
-        </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+  {/* LOGO ADDED BELOW */}
+  <div className="hover" style={{ 
+    width: '32px', 
+    height: '32px', 
+    borderRadius: '8px', 
+    display: 'flex', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    overflow: 'hidden' // Ensures logo stays inside the box
+  }}>
+    <img 
+      src="/LOGO.png" 
+      alt="JobLink Logo" 
+      style={{ width: '100%', height: '100%', objectFit: 'contain' }} 
+    />
+  </div>
+  <span className="hover" style={{ fontSize: '1.25rem', fontWeight: 'bold', color: theme.textMain }}>JobLink</span>
+</div>
 
         <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
           
