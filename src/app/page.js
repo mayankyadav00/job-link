@@ -53,7 +53,7 @@ export default function LandingPage() {
   <div className="hover" style={{ 
     width: '32px', 
     height: '32px', 
-    borderRadius: '8px', 
+    borderRadius: '50%', 
     display: 'flex', 
     alignItems: 'center', 
     justifyContent: 'center', 
