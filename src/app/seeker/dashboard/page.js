@@ -1,8 +1,7 @@
 'use client';
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { useRouter, useSearchParams } from 'next/navigation'; // Added useSearchParams
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { MapPin, Clock, Search, Briefcase, CheckCircle, XCircle, Clock3 } from 'lucide-react';
 
@@ -15,9 +14,10 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
-export default function SeekerDashboard() {
+// --- PART 1: THE MAIN LOGIC COMPONENT ---
+function DashboardContent() {
   const router = useRouter();
-  const searchParams = useSearchParams(); // To read the URL
+  const searchParams = useSearchParams(); // This causes the pre-render error if not suspended
   
   const [user, setUser] = useState(null);
   const [activeTab, setActiveTab] = useState('find'); 
@@ -27,16 +27,17 @@ export default function SeekerDashboard() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Check URL for ?view=applied
   useEffect(() => {
-    checkUser();
-  }, []);
-
-  // Check URL for ?view=applied when page loads
-  useEffect(() => {
-    if (searchParams.get('view') === 'applied') {
+    const viewParam = searchParams.get('view');
+    if (viewParam === 'applied') {
       setActiveTab('applied');
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    checkUser();
+  }, []);
 
   const checkUser = async () => {
     const { data: { user }, error } = await supabase.auth.getUser();
@@ -58,32 +59,22 @@ export default function SeekerDashboard() {
     setLoading(false);
   };
 
-  // FETCH APPLICATIONS (This gets the status)
   const fetchMyApplications = async (userId) => {
-    // If no ID provided, try to use state (fallback)
     const uid = userId || user?.id;
     if (!uid) return;
 
-    console.log("Refreshing Application Status..."); // Debug Log
-
     const { data } = await supabase
       .from('applications')
-      .select(`
-        *,
-        job:jobs ( title, pay_rate, location_name, provider_id )
-      `)
+      .select(`*, job:jobs ( title, pay_rate, location_name, provider_id )`)
       .eq('seeker_id', uid)
       .order('created_at', { ascending: false });
 
     if (data) setApplications(data);
   };
 
-  // Force Refresh when switching tabs
   const handleTabSwitch = (tabName) => {
     setActiveTab(tabName);
-    if (tabName === 'applied') {
-        fetchMyApplications(user.id);
-    }
+    if (tabName === 'applied') fetchMyApplications(user.id);
   };
 
   const getStatusBadge = (status) => {
@@ -92,7 +83,7 @@ export default function SeekerDashboard() {
     return <span style={{ ...badgeStyle, background: '#ffedd5', color: '#c2410c' }}><Clock3 size={14} /> Pending</span>;
   };
 
-  if (loading) return <div style={{ padding: '40px', textAlign: 'center' }}>Loading...</div>;
+  if (loading) return <div style={{ padding: '40px', textAlign: 'center' }}>Loading Dashboard...</div>;
 
   return (
     <div style={{ paddingBottom: '90px', fontFamily: 'Arial, sans-serif', minHeight: '100vh', background: '#f8fafc' }}>
@@ -176,7 +167,15 @@ export default function SeekerDashboard() {
   );
 }
 
+// --- PART 2: THE SUSPENSE WRAPPER (Fixes Prerender Error) ---
+export default function SeekerDashboard() {
+  return (
+    <Suspense fallback={<div style={{ padding: '20px', textAlign: 'center' }}>Loading...</div>}>
+      <DashboardContent />
+    </Suspense>
+  );
+}
+
 const tabStyle = { flex: 1, padding: '10px', border: 'none', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s' };
 const cardStyle = { background: 'white', padding: '20px', borderRadius: '16px', marginBottom: '15px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)', border: '1px solid #eee' };
 const badgeStyle = { display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 10px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold', textTransform: 'uppercase' };
-
