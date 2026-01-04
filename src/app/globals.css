@@ -578,4 +578,28 @@ body {
     transform: scale(1.1);
 }
 
+/* RESET DEFAULTS */
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
 
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: #eef2f6; /* Darker background outside the phone app */
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* HIDE SCROLLBAR (Optional: Makes it look more native) */
+::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
