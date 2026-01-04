@@ -62,7 +62,7 @@ export default function LandingPage() {
     <img 
       src="/logo.png" 
       alt="JobLink Logo" 
-      style={{ width: '200%', height: '200%', objectFit: 'contain' }} 
+      style={{ width: '100%', height: '100%', objectFit: 'contain' }} 
     />
   </div>
   <span className="hover" style={{ fontSize: '1.25rem', fontWeight: 'bold', color: theme.textMain }}>JobLink</span>
