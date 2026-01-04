@@ -49,7 +49,7 @@ export default function LandingPage() {
       }}>
         
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <img src="LOGO.png" id="LOGO">
+           <div className="hover" style={{ width: '32px', height: '32px', background: '#4285F4', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold' }}>J</div>
           <span className="hover" style={{ fontSize: '1.25rem', fontWeight: 'bold', color: theme.textMain }}>JobLink</span>
         </div>
 
