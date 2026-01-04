@@ -90,8 +90,26 @@ function DashboardContent() {
       {showOnboarding && <OnboardingForm user={user} role="seeker" onComplete={() => setShowOnboarding(false)} />}
 
       {/* HEADER */}
-      <div style={{ background: 'white', padding: '20px 20px 10px 20px', borderBottom: '1px solid #e2e8f0' }}>
-        <h1 style={{ margin: '0 0 5px 0', fontSize: '1.5rem', color: '#1e293b' }}>JobLink</h1>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+  {/* LOGO ADDED BELOW */}
+ <div className="hover" style={{ 
+    width: '32px', 
+    height: '32px', 
+    borderRadius: '50%', 
+    display: 'flex', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    overflow: 'hidden' // Ensures logo stays inside the box
+  }}>
+    <img 
+      src="/logo.png" 
+      alt="JobLink Logo" 
+      style={{ width: '100%', height: '100%', objectFit: 'contain' }} 
+    />
+  </div>
+  <span className="hover" style={{ fontSize: '1.25rem', fontWeight: 'bold', color: theme.textMain }}>JobLink</span>
+</div>
+
         <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem' }}>Find work nearby</p>
         
         {/* TABS */}
@@ -179,4 +197,5 @@ export default function SeekerDashboard() {
 const tabStyle = { flex: 1, padding: '10px', border: 'none', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s' };
 const cardStyle = { background: 'white', padding: '20px', borderRadius: '16px', marginBottom: '15px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)', border: '1px solid #eee' };
 const badgeStyle = { display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 10px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold', textTransform: 'uppercase' };
+
 
