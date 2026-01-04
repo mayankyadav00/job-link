@@ -60,7 +60,7 @@ export default function LandingPage() {
     overflow: 'hidden' // Ensures logo stays inside the box
   }}>
     <img 
-      src="/src/logo.png" 
+      src="file:///C:/Users/LENOVO/OneDrive/Desktop/LOGO.png" 
       alt="JobLink Logo" 
       style={{ width: '100%', height: '100%', objectFit: 'contain' }} 
     />
