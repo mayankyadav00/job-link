@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
-import { User, MapPin, Phone, Briefcase, LogOut, Save, ChevronDown, List } from 'lucide-react';
+import { User, LogOut, Save, ChevronDown, Briefcase } from 'lucide-react';
 import { BottomNav } from '../../../components/BottomNav';
 
 const supabase = createClient(
@@ -14,17 +14,11 @@ export default function SeekerProfile() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [appCount, setAppCount] = useState(0); // Store count here
-  
-  // Toggles for the sections
+  const [appCount, setAppCount] = useState(0); 
   const [showEdit, setShowEdit] = useState(true); 
 
   const [profile, setProfile] = useState({
-    full_name: '',
-    phone: '',
-    address: '',
-    skills: '',
-    email: ''
+    full_name: '', phone: '', address: '', skills: '', email: ''
   });
 
   useEffect(() => {
@@ -35,12 +29,10 @@ export default function SeekerProfile() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { router.push('/login'); return; }
 
-    // 1. Fetch Profile Info
     const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
     if (data) setProfile(data);
 
-    // 2. Fetch Application Count
-    // count: 'exact' tells Supabase to just give us the number, not the data
+    // Get Count
     const { count } = await supabase
       .from('applications')
       .select('*', { count: 'exact', head: true }) 
@@ -64,7 +56,6 @@ export default function SeekerProfile() {
 
     if (error) alert("Error saving");
     else alert("Profile Updated! ✅");
-    
     setSaving(false);
   };
 
@@ -91,7 +82,6 @@ export default function SeekerProfile() {
         
         {/* --- OPTION 1: EDIT PROFILE --- */}
         <div style={{ background: 'white', borderRadius: '16px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-          {/* Title Bar (Click to toggle) */}
           <div 
             onClick={() => setShowEdit(!showEdit)}
             style={{ padding: '15px 20px', background: '#f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
@@ -102,39 +92,25 @@ export default function SeekerProfile() {
              <ChevronDown size={18} style={{ transform: showEdit ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.2s' }} />
           </div>
 
-          {/* Form Content */}
           {showEdit && (
             <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
-              <div style={inputGroupStyle}>
-                <label style={labelStyle}>Full Name</label>
-                <input value={profile.full_name || ''} onChange={(e) => setProfile({...profile, full_name: e.target.value})} style={inputStyle} />
-              </div>
-              <div style={inputGroupStyle}>
-                <label style={labelStyle}>Skills</label>
-                <input value={profile.skills || ''} onChange={(e) => setProfile({...profile, skills: e.target.value})} placeholder="e.g. Driver, Plumber" style={inputStyle} />
-              </div>
-              <div style={inputGroupStyle}>
-                <label style={labelStyle}>Phone</label>
-                <input value={profile.phone || ''} onChange={(e) => setProfile({...profile, phone: e.target.value})} style={inputStyle} />
-              </div>
-              <div style={inputGroupStyle}>
-                <label style={labelStyle}>Address</label>
-                <input value={profile.address || ''} onChange={(e) => setProfile({...profile, address: e.target.value})} style={inputStyle} />
-              </div>
+              <div style={inputGroupStyle}><label style={labelStyle}>Full Name</label><input value={profile.full_name || ''} onChange={(e) => setProfile({...profile, full_name: e.target.value})} style={inputStyle} /></div>
+              <div style={inputGroupStyle}><label style={labelStyle}>Skills</label><input value={profile.skills || ''} onChange={(e) => setProfile({...profile, skills: e.target.value})} placeholder="e.g. Driver" style={inputStyle} /></div>
+              <div style={inputGroupStyle}><label style={labelStyle}>Phone</label><input value={profile.phone || ''} onChange={(e) => setProfile({...profile, phone: e.target.value})} style={inputStyle} /></div>
+              <div style={inputGroupStyle}><label style={labelStyle}>Address</label><input value={profile.address || ''} onChange={(e) => setProfile({...profile, address: e.target.value})} style={inputStyle} /></div>
 
-              <button 
-                onClick={handleUpdate}
-                disabled={saving}
-                style={{ padding: '12px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '10px', fontSize: '1rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginTop: '5px' }}
-              >
+              <button onClick={handleUpdate} disabled={saving} style={{ padding: '12px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '10px', fontSize: '1rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginTop: '5px' }}>
                 {saving ? 'Saving...' : <><Save size={18} /> Save Changes</>}
               </button>
             </div>
           )}
         </div>
 
-        {/* --- OPTION 2: APPLICATIONS APPLIED --- */}
-        <div style={{ background: 'white', borderRadius: '16px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)' }}>
+        {/* --- OPTION 2: APPLICATIONS (Clickable Now!) --- */}
+        <div 
+           onClick={() => router.push('/seeker/dashboard?view=applied')} // <--- CLICK ACTION ADDED
+           style={{ background: 'white', borderRadius: '16px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)', cursor: 'pointer' }}
+        >
            <div style={{ padding: '15px 20px', display: 'flex', alignItems: 'center', gap: '15px' }}>
               <div style={{ width: '45px', height: '45px', borderRadius: '10px', background: '#ecfdf5', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                  <Briefcase size={24} />
@@ -149,16 +125,11 @@ export default function SeekerProfile() {
            </div>
         </div>
 
-        {/* Logout */}
-        <button 
-          onClick={handleLogout}
-          style={{ padding: '15px', background: '#fee2e2', color: '#ef4444', border: 'none', borderRadius: '12px', fontSize: '1rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}
-        >
+        <button onClick={handleLogout} style={{ padding: '15px', background: '#fee2e2', color: '#ef4444', border: 'none', borderRadius: '12px', fontSize: '1rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
           <LogOut size={18} /> Logout
         </button>
 
       </div>
-
       <BottomNav />
     </div>
   );
