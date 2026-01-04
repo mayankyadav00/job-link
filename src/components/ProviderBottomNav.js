@@ -24,7 +24,7 @@ export function ProviderBottomNav() {
       </Link>
 
       {/* 2. POST JOB (Central Highlighted Button) */}
-      <Link href="/provider/post-job">
+      <Link id="joblinklogo" href="/provider/post-job">
         <div style={{
           width: '50px',
           height: '50px',
@@ -52,4 +52,5 @@ export function ProviderBottomNav() {
   );
 
 }
+
 
