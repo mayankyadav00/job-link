@@ -1,273 +1,180 @@
 'use client';
-import { BottomNav } from '../../../components/BottomNav';
-import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { X, Filter, Map, List } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
-import JobMap from '../../../components/JobMap';
-import AIChatBot from '../../../components/AIChatBot';
-import OnboardingForm from '../../../components/OnboardingForm'; // <--- ADDED THIS IMPORT
+import { useRouter, useSearchParams } from 'next/navigation'; // Added useSearchParams
+import Link from 'next/link';
+import { MapPin, Clock, Search, Briefcase, CheckCircle, XCircle, Clock3 } from 'lucide-react';
 
-// --- 1. SETUP DATABASE CONNECTION ---
+import { BottomNav } from '../../../components/BottomNav';
+import AIChatBot from '../../../components/AIChatBot';
+import OnboardingForm from '../../../components/OnboardingForm';
+
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
-export default function HomeTab() {
+export default function SeekerDashboard() {
+  const router = useRouter();
+  const searchParams = useSearchParams(); // To read the URL
   
-  // 2. STATE: Store Real Jobs from Database
+  const [user, setUser] = useState(null);
+  const [activeTab, setActiveTab] = useState('find'); 
   const [jobs, setJobs] = useState([]);
+  const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState(null);               // <--- ADDED
-  const [showOnboarding, setShowOnboarding] = useState(false); // <--- ADDED
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
-  // 3. STATE: Filter UI visibility
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-
-  // 4. STATE: View Mode (List or Map)
-  const [viewMode, setViewMode] = useState('list'); // 'list' or 'map'
-
-  // 5. STATE: Store selected options
-  const [selectedFilters, setSelectedFilters] = useState({
-    workMode: [],
-    department: [],
-    duration: []
-  });
-
-  // --- EFFECT: FETCH REAL JOBS & CHECK USER ON LOAD ---
   useEffect(() => {
-    const initData = async () => {
-        // A. Check User Profile (For Signup Form)
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-            setUser(user);
-            // Check if profile exists and has data
-            const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-            // If no profile or no skills saved, show the form
-            if (!profile || !profile.skills) {
-                setShowOnboarding(true);
-            }
-        }
-
-        // B. Fetch Jobs
-        const { data, error } = await supabase
-            .from('jobs')
-            .select('*')
-            .order('created_at', { ascending: false });
-
-        if (data) setJobs(data);
-        setLoading(false);
-    };
-
-    initData();
+    checkUser();
   }, []);
 
-  // --- LOGIC: CHECKBOX HANDLER ---
-  const handleCheckboxChange = (category, value) => {
-    setSelectedFilters(prev => {
-      const categoryList = prev[category];
-      if (categoryList.includes(value)) {
-        return { ...prev, [category]: categoryList.filter(item => item !== value) };
-      } else {
-        return { ...prev, [category]: [...categoryList, value] };
-      }
-    });
+  // Check URL for ?view=applied when page loads
+  useEffect(() => {
+    if (searchParams.get('view') === 'applied') {
+      setActiveTab('applied');
+    }
+  }, [searchParams]);
+
+  const checkUser = async () => {
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error || !user) { router.push('/login'); return; }
+    setUser(user);
+
+    const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+    if (!profile || !profile.full_name) setShowOnboarding(true);
+
+    fetchJobs();
+    fetchMyApplications(user.id);
   };
 
-  // --- LOGIC: MASTER FILTER ---
-  const filteredJobs = jobs.filter((job) => {
-    // 1. Check Work Mode (Using location/address as proxy)
-    if (selectedFilters.workMode.length > 0) {
-       const match = selectedFilters.workMode.some(filter => 
-         (job.location_name || '').includes(filter) || (job.work_mode || '').includes(filter)
-       );
-       if (!match) return false;
-    }
-    
-    // 2. Check Department (Using title/description match)
-    if (selectedFilters.department.length > 0) {
-       const match = selectedFilters.department.some(filter => 
-         job.title.toLowerCase().includes(filter.toLowerCase()) || 
-         (job.description || '').toLowerCase().includes(filter.toLowerCase())
-       );
-       if (!match) return false;
-    }
-    
-    // 3. Check Duration (Using job_type)
-    if (selectedFilters.duration.length > 0) {
-       const match = selectedFilters.duration.some(filter => {
-         if (filter === "Short time (hours)") return job.job_type === "Daily Wage";
-         if (filter === "One day") return job.job_type === "Contract";
-         if (filter === "Long term") return job.job_type === "Full-time";
-         return job.job_type === filter;
-       });
-       if (!match) return false;
-    }
-
-    return true;
-  });
-
-  // CATEGORY LISTS
-  const filterOptions = {
-    workMode: ["Work from home", "Remote Area", "Patna", "Kankarbagh"], 
-    department: ["Plumber", "Electrician", "Cleaner", "Helper"],
-    duration: ["Short time (hours)", "One day", "Long term"]
+  const fetchJobs = async () => {
+    let query = supabase.from('jobs').select('*').eq('status', 'open').order('created_at', { ascending: false });
+    if (searchTerm) query = query.ilike('title', `%${searchTerm}%`);
+    const { data } = await query;
+    if (data) setJobs(data);
+    setLoading(false);
   };
+
+  // FETCH APPLICATIONS (This gets the status)
+  const fetchMyApplications = async (userId) => {
+    // If no ID provided, try to use state (fallback)
+    const uid = userId || user?.id;
+    if (!uid) return;
+
+    console.log("Refreshing Application Status..."); // Debug Log
+
+    const { data } = await supabase
+      .from('applications')
+      .select(`
+        *,
+        job:jobs ( title, pay_rate, location_name, provider_id )
+      `)
+      .eq('seeker_id', uid)
+      .order('created_at', { ascending: false });
+
+    if (data) setApplications(data);
+  };
+
+  // Force Refresh when switching tabs
+  const handleTabSwitch = (tabName) => {
+    setActiveTab(tabName);
+    if (tabName === 'applied') {
+        fetchMyApplications(user.id);
+    }
+  };
+
+  const getStatusBadge = (status) => {
+    if (status === 'accepted') return <span style={{ ...badgeStyle, background: '#dcfce7', color: '#166534' }}><CheckCircle size={14} /> Accepted</span>;
+    if (status === 'rejected') return <span style={{ ...badgeStyle, background: '#fee2e2', color: '#ef4444' }}><XCircle size={14} /> Rejected</span>;
+    return <span style={{ ...badgeStyle, background: '#ffedd5', color: '#c2410c' }}><Clock3 size={14} /> Pending</span>;
+  };
+
+  if (loading) return <div style={{ padding: '40px', textAlign: 'center' }}>Loading...</div>;
 
   return (
-    <div style={{ paddingBottom: '80px', fontFamily: 'Arial, sans-serif', position: 'relative' }}>
-      
-      {/* --- ADDED: ONBOARDING POPUP --- */}
-      {showOnboarding && (
-        <OnboardingForm 
-          user={user} 
-          role="seeker" 
-          onComplete={() => setShowOnboarding(false)} 
-        />
-      )}
+    <div style={{ paddingBottom: '90px', fontFamily: 'Arial, sans-serif', minHeight: '100vh', background: '#f8fafc' }}>
+      {showOnboarding && <OnboardingForm user={user} role="seeker" onComplete={() => setShowOnboarding(false)} />}
 
       {/* HEADER */}
-      <div style={{ padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'white', boxShadow: '0 2px 5px rgba(0,0,0,0.05)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ width: '30px', height: '30px', background: '#4285F4', borderRadius: '50%' }}></div>
-          <h1 style={{ fontSize: '1.5rem', margin: 0 }}>JobLink</h1>
-        </div>
+      <div style={{ background: 'white', padding: '20px 20px 10px 20px', borderBottom: '1px solid #e2e8f0' }}>
+        <h1 style={{ margin: '0 0 5px 0', fontSize: '1.5rem', color: '#1e293b' }}>JobLink</h1>
+        <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem' }}>Find work nearby</p>
         
-        <div style={{ display: 'flex', gap: '10px' }}>
-          {/* VIEW TOGGLE BUTTONS */}
-          <div style={{ display: 'flex', background: '#f1f3f4', borderRadius: '20px', padding: '4px' }}>
-            <button 
-              onClick={() => setViewMode('list')}
-              style={{ padding: '6px 12px', border: 'none', background: viewMode === 'list' ? 'white' : 'transparent', borderRadius: '16px', cursor: 'pointer', boxShadow: viewMode === 'list' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none', display: 'flex', alignItems: 'center', gap: '5px' }}
-            >
-              <List size={16} />
-            </button>
-            <button 
-              onClick={() => setViewMode('map')}
-              style={{ padding: '6px 12px', border: 'none', background: viewMode === 'map' ? 'white' : 'transparent', borderRadius: '16px', cursor: 'pointer', boxShadow: viewMode === 'map' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none', display: 'flex', alignItems: 'center', gap: '5px' }}
-            >
-              <Map size={16} />
-            </button>
-          </div>
-
-          {/* FILTER BUTTON */}
-          <button 
-            onClick={() => setIsFilterOpen(true)}
-            style={{ 
-              display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 15px', 
-              background: '#f1f3f4', border: 'none', borderRadius: '20px', fontWeight: 'bold', cursor: 'pointer' 
-            }}
-          >
-            <span>Filter</span>
-            <Filter size={16} />
+        {/* TABS */}
+        <div style={{ display: 'flex', marginTop: '20px', background: '#f1f5f9', padding: '5px', borderRadius: '12px' }}>
+          <button onClick={() => handleTabSwitch('find')} style={{ ...tabStyle, background: activeTab === 'find' ? 'white' : 'transparent', color: activeTab === 'find' ? '#0f172a' : '#64748b', boxShadow: activeTab === 'find' ? '0 2px 5px rgba(0,0,0,0.05)' : 'none' }}>Find Jobs</button>
+          <button onClick={() => handleTabSwitch('applied')} style={{ ...tabStyle, background: activeTab === 'applied' ? 'white' : 'transparent', color: activeTab === 'applied' ? '#0f172a' : '#64748b', boxShadow: activeTab === 'applied' ? '0 2px 5px rgba(0,0,0,0.05)' : 'none' }}>
+            My Applications {applications.length > 0 && `(${applications.length})`}
           </button>
         </div>
       </div>
 
-      {/* --- CONTENT AREA (List vs Map) --- */}
-      {viewMode === 'list' ? (
-        /* LIST VIEW */
-        <div style={{ padding: '20px' }}>
-          <p style={{ color: '#666', fontSize: '0.9rem', marginBottom: '15px' }}>
-            {loading ? "Loading jobs..." : `Found ${filteredJobs.length} jobs nearby.`}
-          </p>
-
-          {filteredJobs.length === 0 && !loading ? (
-             <div style={{ textAlign: 'center', marginTop: '50px', color: '#999' }}>
-               <p>No jobs match these filters.</p>
-               <button onClick={() => setSelectedFilters({ workMode: [], department: [], duration: [] })} style={{ color: '#4285F4', textDecoration: 'underline', border: 'none', background: 'none', cursor: 'pointer' }}>Clear all filters</button>
-             </div>
-          ) : (
-            filteredJobs.map((job) => (
-              <Link href={`/seeker/job/${job.id}`} key={job.id} style={{ textDecoration: 'none', color: 'inherit' }}>
-                <div style={{
-                  border: '1px solid #eee', borderRadius: '12px', padding: '15px', marginBottom: '15px',
-                  boxShadow: '0 2px 5px rgba(0,0,0,0.05)', background: 'white'
-                }}>
-                  <h3 style={{ margin: '0 0 5px 0' }}>{job.title}</h3>
-                  <p style={{ margin: '0 0 10px 0', color: '#666', fontSize: '0.9rem' }}>
-                    {job.job_type || 'General'} • {job.location_name || 'Patna'}
-                  </p>
-                  <div style={{ display: 'flex', gap: '10px' }}>
-                    <span style={{ background: '#e3f2fd', color: '#1565c0', padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem' }}>
-                      {job.job_type}
-                    </span>
-                    <span style={{ background: '#e8f5e9', color: '#2e7d32', padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem' }}>
-                      {job.pay_rate}
-                    </span>
+      <div style={{ padding: '20px' }}>
+        {activeTab === 'find' && (
+          <>
+            <div style={{ position: 'relative', marginBottom: '20px' }}>
+              <Search size={20} style={{ position: 'absolute', left: '15px', top: '12px', color: '#94a3b8' }} />
+              <input placeholder="Search (e.g. Driver, Cook)" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} onKeyUp={(e) => e.key === 'Enter' && fetchJobs()} style={{ width: '100%', padding: '12px 12px 12px 45px', borderRadius: '12px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '1rem' }} />
+            </div>
+            {jobs.map(job => (
+              <Link href={`/seeker/job/${job.id}`} key={job.id} style={{ textDecoration: 'none' }}>
+                <div style={cardStyle}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <h3 style={{ margin: '0 0 5px 0', fontSize: '1.1rem', color: '#0f172a' }}>{job.title}</h3>
+                    <span style={{ fontWeight: 'bold', color: '#166534', background: '#dcfce7', padding: '4px 8px', borderRadius: '6px', fontSize: '0.8rem' }}>{job.pay_rate}</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '15px', color: '#64748b', fontSize: '0.9rem', marginTop: '10px' }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><MapPin size={14} /> {job.location_name}</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Clock size={14} /> {job.job_type}</span>
                   </div>
                 </div>
               </Link>
-            ))
-          )}
-        </div>
-      ) : (
-        /* MAP VIEW */
-        <div style={{ padding: '20px', height: 'calc(100vh - 150px)' }}>
-          <JobMap jobs={filteredJobs} />
-        </div>
-      )}
-
-      {/* --- FILTER POPUP (Modal) --- */}
-      {isFilterOpen && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
-          backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 2000,
-          display: 'flex', justifyContent: 'flex-end'
-        }}>
-          <div style={{
-            width: '85%', maxWidth: '400px', height: '100%', backgroundColor: 'white',
-            padding: '25px', overflowY: 'auto', animation: 'slideIn 0.3s ease-out'
-          }}>
-            
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
-              <h2 style={{ margin: 0 }}>Listing Filters</h2>
-              <button onClick={() => setIsFilterOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-                <X size={24} />
-              </button>
-            </div>
-
-            {Object.entries(filterOptions).map(([category, options]) => (
-              <div key={category} style={{ marginBottom: '30px' }}>
-                <h3 style={{ fontSize: '1rem', marginBottom: '15px', textTransform: 'capitalize' }}>
-                  {category.replace(/([A-Z])/g, ' $1').trim()}
-                </h3>
-                {options.map(option => (
-                  <label key={option} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px', cursor: 'pointer' }}>
-                    <input 
-                      type="checkbox" 
-                      checked={selectedFilters[category].includes(option)}
-                      onChange={() => handleCheckboxChange(category, option)}
-                      style={{ transform: 'scale(1.2)' }}
-                    />
-                    <span style={{ color: '#555' }}>{option}</span>
-                  </label>
-                ))}
-              </div>
             ))}
+          </>
+        )}
 
-            <button 
-              onClick={() => setIsFilterOpen(false)}
-              style={{ width: '100%', padding: '15px', background: '#4285F4', color: 'white', border: 'none', borderRadius: '10px', fontSize: '1rem', fontWeight: 'bold', cursor: 'pointer' }}
-            >
-              Apply Filters
-            </button>
+        {activeTab === 'applied' && (
+          <>
+            {applications.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>
+                <Briefcase size={40} style={{ marginBottom: '10px', opacity: 0.5 }} />
+                <p>You haven't applied to any jobs yet.</p>
+              </div>
+            ) : (
+              applications.map(app => (
+                <div key={app.id} style={cardStyle}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+                    <div>
+                      <h3 style={{ margin: '0 0 5px 0', fontSize: '1.1rem', color: '#0f172a' }}>{app.job?.title || 'Job Deleted'}</h3>
+                      <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem' }}>{app.job?.location_name}</p>
+                    </div>
+                    {getStatusBadge(app.status)}
+                  </div>
+                  {app.status === 'accepted' && (
+                    <div style={{ marginTop: '15px', padding: '10px', background: '#f0fdf4', borderRadius: '8px', border: '1px solid #bbf7d0', fontSize: '0.9rem', color: '#15803d' }}>
+                      🎉 <b>Congratulations!</b> The provider has accepted your application.
+                    </div>
+                  )}
+                  {app.status === 'rejected' && (
+                    <div style={{ marginTop: '15px', fontSize: '0.85rem', color: '#94a3b8' }}>
+                      Application closed.
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </>
+        )}
+      </div>
 
-          </div>
-        </div>
-      )}
-
-      <BottomNav />
-      
-      <style jsx global>{`
-        @keyframes slideIn {
-          from { transform: translateX(100%); }
-          to { transform: translateX(0); }
-        }
-      `}</style>
       <AIChatBot />
+      <BottomNav />
     </div>
   );
 }
 
+const tabStyle = { flex: 1, padding: '10px', border: 'none', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s' };
+const cardStyle = { background: 'white', padding: '20px', borderRadius: '16px', marginBottom: '15px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)', border: '1px solid #eee' };
+const badgeStyle = { display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 10px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold', textTransform: 'uppercase' };
